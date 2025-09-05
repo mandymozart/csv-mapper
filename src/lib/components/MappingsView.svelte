@@ -180,6 +180,8 @@
 			title="Input Data Preview"
 			showLineNumbers={true}
 			hasHeaders={false}
+			collapsible={true}
+			defaultCollapsed={false}
 		/>
 	{/if}
 
@@ -189,6 +191,8 @@
 			title="Output Data Preview"
 			showLineNumbers={true}
 			hasHeaders={false}
+			collapsible={true}
+			defaultCollapsed={false}
 		/>
 	{/if}
 </div>

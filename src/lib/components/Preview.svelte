@@ -8,6 +8,8 @@
 		hasHeaders?: boolean;
 		defaultStartRow?: number;
 		defaultRowCount?: number;
+		collapsible?: boolean;
+		defaultCollapsed?: boolean;
 	}
 
 	let { 
@@ -16,11 +18,14 @@
 		showLineNumbers = true, 
 		hasHeaders = false,
 		defaultStartRow = 1,
-		defaultRowCount = 5 
+		defaultRowCount = 5,
+		collapsible = false,
+		defaultCollapsed = false
 	}: Props = $props();
 
 	let previewStartRow = $state(defaultStartRow);
 	let previewRowCount = $state(defaultRowCount);
+	let isCollapsed = $state(defaultCollapsed);
 
 	// Update start row when hasHeaders changes
 	$effect(() => {
@@ -35,12 +40,24 @@
 	let startIndex = $derived(previewStartRow - (hasHeaders ? 2 : 1));
 	let endIndex = $derived(startIndex + previewRowCount);
 	let displayRows = $derived(data.rows.slice(startIndex, endIndex));
+
+	function toggleCollapse() {
+		isCollapsed = !isCollapsed;
+	}
 </script>
 
 <div class="preview">
 	<div class="preview-header">
-		<h4>{title} ({data.rows.length} rows)</h4>
-		<div class="preview-controls">
+		<div class="header-left">
+			<h4>{title} ({data.rows.length} rows)</h4>
+			{#if collapsible}
+				<button class="collapse-btn" onclick={toggleCollapse}>
+					{isCollapsed ? '▶' : '▼'}
+				</button>
+			{/if}
+		</div>
+		{#if !isCollapsed}
+			<div class="preview-controls">
 			<div class="row-selector">
 				<label for="startRow">Start row:</label>
 				<input 
@@ -62,39 +79,42 @@
 					<option value={50}>50 rows</option>
 				</select>
 			</div>
-		</div>
+			</div>
+		{/if}
 	</div>
 	
-	<div class="table-container">
-		<table class="preview-table">
-			<thead>
-				<tr>
-					{#if showLineNumbers}
-						<th class="line-number-header">#</th>
-					{/if}
-					{#each data.headers as header}
-						<th>{header}</th>
-					{/each}
-				</tr>
-			</thead>
-			<tbody>
-				{#each displayRows as row, index}
+	{#if !isCollapsed}
+		<div class="table-container">
+			<table class="preview-table">
+				<thead>
 					<tr>
 						{#if showLineNumbers}
-							<td class="line-number">{previewStartRow + index}</td>
+							<th class="line-number-header">#</th>
 						{/if}
 						{#each data.headers as header}
-							<td>{row[header] || ''}</td>
+							<th>{header}</th>
 						{/each}
 					</tr>
-				{/each}
-			</tbody>
-		</table>
-	</div>
-	
-	<p class="preview-note">
-		Showing rows {previewStartRow}-{Math.min(previewStartRow + previewRowCount - 1, maxRow)} of {maxRow} total
-	</p>
+				</thead>
+				<tbody>
+					{#each displayRows as row, index}
+						<tr>
+							{#if showLineNumbers}
+								<td class="line-number">{previewStartRow + index}</td>
+							{/if}
+							{#each data.headers as header}
+								<td>{row[header] || ''}</td>
+							{/each}
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+		
+		<p class="preview-note">
+			Showing rows {previewStartRow}-{Math.min(previewStartRow + previewRowCount - 1, maxRow)} of {maxRow} total
+		</p>
+	{/if}
 </div>
 
 <style>
@@ -109,13 +129,32 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-bottom: 1rem;
 		flex-wrap: wrap;
 		gap: 1rem;
 	}
 
+	.header-left {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
 	.preview-header h4 {
 		margin: 0;
+		color: #333;
+	}
+
+	.collapse-btn {
+		background: none;
+		border: none;
+		font-size: 1rem;
+		cursor: pointer;
+		padding: 0.25rem;
+		color: #666;
+		transition: color 0.2s;
+	}
+
+	.collapse-btn:hover {
 		color: #333;
 	}
 
@@ -158,6 +197,7 @@
 		border-radius: 4px;
 		overflow: auto;
 		max-height: 300px;
+		margin-top: 1rem;
 	}
 
 	.preview-table {
