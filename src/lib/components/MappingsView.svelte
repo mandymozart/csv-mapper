@@ -47,6 +47,24 @@
 		}
 	}
 
+	function moveMappingUp(index: number) {
+		if (index > 0 && profile.mappings) {
+			const mappings = [...profile.mappings];
+			[mappings[index - 1], mappings[index]] = [mappings[index], mappings[index - 1]];
+			profile.mappings = mappings;
+			onUpdate();
+		}
+	}
+
+	function moveMappingDown(index: number) {
+		if (index < profile.mappings.length - 1 && profile.mappings) {
+			const mappings = [...profile.mappings];
+			[mappings[index], mappings[index + 1]] = [mappings[index + 1], mappings[index]];
+			profile.mappings = mappings;
+			onUpdate();
+		}
+	}
+
 	function updateMapping(mappingId: string, field: keyof ColumnMapping, value: any) {
 		if (profile.mappings) {
 			const mapping = profile.mappings.find(m => m.id === mappingId);
@@ -101,13 +119,34 @@
 		<div class="mappings-container">
 			<div class="mappings-grid">
 				<div class="grid-header">
+					<div class="reorder-section"></div>
 					<div class="input-section">Input</div>
 					<div class="mapping-section">Config</div>
 					<div class="output-section">Output</div>
 				</div>
 
-				{#each profile.mappings as mapping (mapping.id)}
+				{#each profile.mappings as mapping, index (mapping.id)}
 					<div class="mapping-row {mapping.isActive ? 'active' : 'inactive'}">
+						<!-- Reorder Controls -->
+						<div class="reorder-controls">
+							<wa-button 
+								variant="ghost" 
+								size="small"
+								onclick={() => moveMappingUp(index)}
+								disabled={index === 0}
+							>
+								<wa-icon name="chevron-up"></wa-icon>
+							</wa-button>
+							<wa-button 
+								variant="ghost" 
+								size="small"
+								onclick={() => moveMappingDown(index)}
+								disabled={index === profile.mappings.length - 1}
+							>
+								<wa-icon name="chevron-down"></wa-icon>
+							</wa-button>
+						</div>
+						
 						<!-- Input Section -->
 						<div class="input-section">
 							<div class="section-content">
@@ -358,6 +397,15 @@
 		background: white;
 	}
 
+	.reorder-controls {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 0.5rem;
+		gap: 0.25rem;
+	}
+
 	.add-mapping-section {
 		margin: 1rem;
 		padding: 1rem;
@@ -388,7 +436,7 @@
 
 	.grid-header {
 		display: grid;
-		grid-template-columns: 1fr 2fr 1fr;
+		grid-template-columns: 60px 1fr 2fr 1fr;
 		background: #f8f9fa;
 		border-bottom: 2px solid #dee2e6;
 		font-weight: bold;
@@ -406,7 +454,7 @@
 
 	.mapping-row {
 		display: grid;
-		grid-template-columns: 1fr 2fr 1fr;
+		grid-template-columns: 60px 1fr 2fr 1fr;
 		border-bottom: 1px solid #dee2e6;
 		transition: opacity 0.2s;
 	}

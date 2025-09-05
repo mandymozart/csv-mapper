@@ -90,6 +90,7 @@ export function transformCsvData(
     transformation?: string;
     transformationMethod?: string;
     transformationParams?: string[];
+    hasTransformation?: boolean;
     isActive: boolean 
   }> = [],
   methods: Method[] = []
@@ -120,14 +121,14 @@ export function transformCsvData(
       
       let value = '';
       
-      // Check for new method-based transformation first
-      if (mapping.transformationMethod && methodsMap.has(mapping.transformationMethod)) {
+      // Check for new method-based transformation first (only if hasTransformation is true)
+      if (mapping.hasTransformation && mapping.transformationMethod && methodsMap.has(mapping.transformationMethod)) {
         const method = methodsMap.get(mapping.transformationMethod)!;
         const params = mapping.transformationParams || [];
         console.log('Executing method:', method.name, 'with params:', params, 'for row:', inputRow);
         value = executeTransformation(method, params, inputRow);
         console.log('Method result:', value);
-      } else if (mapping.transformation && mapping.transformation.trim()) {
+      } else if (mapping.hasTransformation && mapping.transformation && mapping.transformation.trim()) {
         // Fallback to old transformation string format
         const parsed = parseTransformation(mapping.transformation);
         if (parsed && methodsMap.has(parsed.methodName)) {
