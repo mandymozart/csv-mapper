@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Profile, CsvData, ColumnMapping } from '$lib/types';
 	import { generateId } from '$lib/utils/storage';
+	import Preview from './Preview.svelte';
 
 	interface Props {
 		profile: Profile;
@@ -10,6 +11,7 @@
 	}
 
 	let { profile = $bindable(), inputCsv, outputCsv, onUpdate }: Props = $props();
+
 
 	function addMapping() {
 		const newMapping: ColumnMapping = {
@@ -173,61 +175,21 @@
 	{/if}
 
 	{#if inputCsv}
-		<div class="data-preview">
-			<h4>Input Data Preview</h4>
-			<div class="table-container">
-				<table class="data-table">
-					<thead>
-						<tr>
-							{#each inputCsv.headers as header}
-								<th>{header}</th>
-							{/each}
-						</tr>
-					</thead>
-					<tbody>
-						{#each inputCsv.rows.slice(0, 5) as row, index}
-							<tr>
-								{#each inputCsv.headers as header}
-									<td>{row[header] || ''}</td>
-								{/each}
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-			{#if inputCsv.rows.length > 5}
-				<p class="preview-note">Showing first 5 rows of {inputCsv.rows.length} total rows</p>
-			{/if}
-		</div>
+		<Preview 
+			data={inputCsv} 
+			title="Input Data Preview"
+			showLineNumbers={true}
+			hasHeaders={false}
+		/>
 	{/if}
 
 	{#if outputCsv && outputCsv.headers.length > 0}
-		<div class="data-preview">
-			<h4>Output Data Preview</h4>
-			<div class="table-container">
-				<table class="data-table">
-					<thead>
-						<tr>
-							{#each outputCsv.headers as header}
-								<th>{header}</th>
-							{/each}
-						</tr>
-					</thead>
-					<tbody>
-						{#each outputCsv.rows.slice(0, 5) as row, index}
-							<tr>
-								{#each outputCsv.headers as header}
-									<td>{row[header] || ''}</td>
-								{/each}
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-			{#if outputCsv.rows.length > 5}
-				<p class="preview-note">Showing first 5 rows of {outputCsv.rows.length} total rows</p>
-			{/if}
-		</div>
+		<Preview 
+			data={outputCsv} 
+			title="Output Data Preview"
+			showLineNumbers={true}
+			hasHeaders={false}
+		/>
 	{/if}
 </div>
 
@@ -395,61 +357,4 @@
 		font-style: italic;
 	}
 
-	.data-preview {
-		background: white;
-		border: 1px solid #dee2e6;
-		border-radius: 8px;
-		padding: 1rem;
-	}
-
-	.data-preview h4 {
-		margin: 0 0 1rem 0;
-		color: #333;
-	}
-
-	.table-container {
-		overflow-x: auto;
-		border: 1px solid #dee2e6;
-		border-radius: 4px;
-	}
-
-	.data-table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 0.9rem;
-	}
-
-	.data-table th,
-	.data-table td {
-		padding: 0.5rem;
-		text-align: left;
-		border-bottom: 1px solid #dee2e6;
-		border-right: 1px solid #dee2e6;
-	}
-
-	.data-table th {
-		background: #f8f9fa;
-		font-weight: 600;
-		color: #495057;
-	}
-
-	.data-table td:last-child,
-	.data-table th:last-child {
-		border-right: none;
-	}
-
-	.data-table tbody tr:last-child td {
-		border-bottom: none;
-	}
-
-	.data-table tbody tr:hover {
-		background: #f8f9fa;
-	}
-
-	.preview-note {
-		margin: 0.5rem 0 0 0;
-		color: #6c757d;
-		font-size: 0.85rem;
-		font-style: italic;
-	}
 </style>

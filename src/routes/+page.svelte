@@ -2,11 +2,11 @@
 	import { onMount } from 'svelte';
 	import type { Profile, CsvData, ViewType } from '$lib/types';
 	import { loadProfiles, saveProfiles, loadCurrentProfileId, saveCurrentProfileId, createNewProfile, generateId } from '$lib/utils/storage';
-	import { parseCsv, downloadCsv } from '$lib/utils/csv';
+	import { downloadCsv } from '$lib/utils/csv';
 	import { transformCsvData } from '$lib/utils/transformation';
 	import MappingsView from '$lib/components/MappingsView.svelte';
 	import MethodsView from '$lib/components/MethodsView.svelte';
-	import CsvImportDialog from '$lib/components/CsvImportDialog.svelte';
+	import ImportDialog from '$lib/components/ImportDialog.svelte';
 
 	let profiles: Profile[] = $state([]);
 	let currentProfile: Profile | null = $state(null);
@@ -199,7 +199,7 @@
 	{/if}
 </div>
 
-<CsvImportDialog 
+<ImportDialog 
 	isOpen={showImportDialog}
 	onClose={() => showImportDialog = false}
 	onImport={handleCsvImport}

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { CsvData, CsvParseOptions } from '$lib/types';
-	import { parseCsvFromFile, parseCsv, detectDelimiter, detectHeaders, DEFAULT_CSV_OPTIONS } from '$lib/utils/csv';
+	import { parseCsvFromFile, detectDelimiter, detectHeaders, DEFAULT_CSV_OPTIONS } from '$lib/utils/csv';
+	import Preview from './Preview.svelte';
 
 	interface Props {
 		isOpen: boolean;
@@ -50,6 +51,7 @@
 			delimiter: detectedDelimiter,
 			hasHeader: hasHeaders
 		};
+
 	}
 
 	function updatePreview() {
@@ -109,7 +111,7 @@
 			</div>
 
 			<div class="dialog-content">
-				{#if !csvText}
+				{#if !fileName}
 					<div class="file-upload">
 						<input 
 							type="file" 
@@ -127,7 +129,7 @@
 					<div class="import-content">
 						<div class="file-info">
 							<strong>File:</strong> {fileName}
-							<button onclick={() => { csvText = ''; fileName = ''; }} class="change-file-btn">
+							<button onclick={() => { fileName = ''; previewData = null; }} class="change-file-btn">
 								Change File
 							</button>
 						</div>
@@ -215,32 +217,12 @@
 						{/if}
 
 						{#if previewData && previewData.headers.length > 0}
-							<div class="preview-section">
-								<h3>Preview ({previewData.rows.length} rows)</h3>
-								<div class="preview-table-container">
-									<table class="preview-table">
-										<thead>
-											<tr>
-												{#each previewData.headers as header}
-													<th>{header}</th>
-												{/each}
-											</tr>
-										</thead>
-										<tbody>
-											{#each previewData.rows.slice(0, 5) as row}
-												<tr>
-													{#each previewData.headers as header}
-														<td>{row[header] || ''}</td>
-													{/each}
-												</tr>
-											{/each}
-										</tbody>
-									</table>
-								</div>
-								{#if previewData.rows.length > 5}
-									<p class="preview-note">Showing first 5 rows of {previewData.rows.length} total</p>
-								{/if}
-							</div>
+							<Preview 
+								data={previewData} 
+								title="Preview"
+								showLineNumbers={true}
+								hasHeaders={parseOptions.hasHeader}
+							/>
 						{/if}
 					</div>
 				{/if}
@@ -412,6 +394,49 @@
 		color: #333;
 	}
 
+	.preview-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1rem;
+		flex-wrap: wrap;
+		gap: 1rem;
+	}
+
+	.preview-controls {
+		display: flex;
+		gap: 1rem;
+		align-items: center;
+	}
+
+	.row-selector {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.row-selector label {
+		font-size: 0.9rem;
+		color: #666;
+		white-space: nowrap;
+	}
+
+	.row-input {
+		width: 80px;
+		padding: 0.25rem 0.5rem;
+		border: 1px solid #ced4da;
+		border-radius: 4px;
+		font-size: 0.9rem;
+	}
+
+	.row-select {
+		padding: 0.25rem 0.5rem;
+		border: 1px solid #ced4da;
+		border-radius: 4px;
+		font-size: 0.9rem;
+		background: white;
+	}
+
 	.preview-table-container {
 		border: 1px solid #dee2e6;
 		border-radius: 4px;
@@ -435,6 +460,24 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		max-width: 150px;
+	}
+
+	.line-number-header,
+	.line-number {
+		width: 60px;
+		min-width: 60px;
+		max-width: 60px;
+		text-align: center;
+		background: #f8f9fa;
+		font-weight: 600;
+		color: #6c757d;
+		font-size: 0.85rem;
+	}
+
+	.line-number-header {
+		position: sticky;
+		top: 0;
+		z-index: 1;
 	}
 
 	.preview-table th {

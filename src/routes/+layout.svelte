@@ -7,7 +7,7 @@
 <svelte:head>
 	<link rel="icon" href={favicon} />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>CSV Mapper - Transform Your Data</title>
+	<title>CSV Mapper</title>
 </svelte:head>
 
 {@render children?.()}
