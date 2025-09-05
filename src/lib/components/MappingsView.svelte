@@ -219,7 +219,7 @@
 											updateMapping(mapping.id, 'targetColumn', mapping.targetColumn);
 										}}
 									/>
-									Custom Target Name
+									Customize Name
 								</label>
 								{#if mapping.hasCustomTarget}
 									<input 
@@ -246,28 +246,47 @@
 											updateMapping(mapping.id, 'transformation', mapping.transformation);
 										}}
 									/>
-									Transformation
+									Add Transformation
 								</label>
 								{#if mapping.hasTransformation}
 									<div class="transformation-config">
 										<label>Method:</label>
-										<select 
-											value={mapping.transformationMethod || ''}
-											onchange={(e: Event) => {
-												mapping.transformationMethod = (e.target as HTMLSelectElement).value;
-												// Reset parameters when method changes
-												mapping.transformationParams = [];
-												updateMapping(mapping.id, 'transformationMethod', mapping.transformationMethod);
-												updateMapping(mapping.id, 'transformationParams', mapping.transformationParams);
-											}}
-										>
-											<option value="">Select method...</option>
-											{#if profile.methods}
-												{#each profile.methods as method}
-													<option value={method.id}>{method.name}</option>
-												{/each}
+										{#if inputCsv}
+											<select 
+												value={mapping.transformationMethod || ''}
+												onchange={(e: Event) => {
+													mapping.transformationMethod = (e.target as HTMLSelectElement).value;
+													// Reset parameters when method changes
+													mapping.transformationParams = [];
+													updateMapping(mapping.id, 'transformationMethod', mapping.transformationMethod);
+													updateMapping(mapping.id, 'transformationParams', mapping.transformationParams);
+												}}
+											>
+												<option value="">Select method...</option>
+												{#if profile.methods}
+													{#each profile.methods as method}
+														<option value={method.id}>{method.name}</option>
+													{/each}
+												{/if}
+											</select>
+										{:else}
+											{#if mapping.transformationMethod && profile.methods}
+												{@const selectedMethod = profile.methods.find(m => m.id === mapping.transformationMethod)}
+												{#if selectedMethod}
+													<wa-badge appearance="filled" variant="neutral" size="medium">
+														{selectedMethod.name}
+													</wa-badge>
+												{:else}
+													<wa-badge appearance="outlined" variant="warning" size="medium">
+														Method not found
+													</wa-badge>
+												{/if}
+											{:else}
+												<wa-badge appearance="outlined" variant="neutral" size="medium">
+													No method selected
+												</wa-badge>
 											{/if}
-										</select>
+										{/if}
 										
 										{#if mapping.transformationMethod && profile.methods}
 											{@const selectedMethod = profile.methods.find(m => m.id === mapping.transformationMethod)}
@@ -277,21 +296,31 @@
 													{#each selectedMethod.parameters as param, index}
 														<div class="parameter-row">
 															<label>{param}:</label>
-															<select 
-																value={mapping.transformationParams?.[index] || ''}
-																onchange={(e: Event) => {
-																	if (!mapping.transformationParams) mapping.transformationParams = [];
-																	mapping.transformationParams[index] = (e.target as HTMLSelectElement).value;
-																	updateMapping(mapping.id, 'transformationParams', mapping.transformationParams);
-																}}
-															>
-																<option value="">Select column...</option>
-																{#if inputCsv}
+															{#if inputCsv}
+																<select 
+																	value={mapping.transformationParams?.[index] || ''}
+																	onchange={(e: Event) => {
+																		if (!mapping.transformationParams) mapping.transformationParams = [];
+																		mapping.transformationParams[index] = (e.target as HTMLSelectElement).value;
+																		updateMapping(mapping.id, 'transformationParams', mapping.transformationParams);
+																	}}
+																>
+																	<option value="">Select column...</option>
 																	{#each inputCsv.headers as header}
 																		<option value="{`{${header}}`}">{header}</option>
 																	{/each}
+																</select>
+															{:else}
+																{#if mapping.transformationParams?.[index]}
+																	<wa-badge appearance="filled" variant="brand" size="medium">
+																		{mapping.transformationParams[index]}
+																	</wa-badge>
+																{:else}
+																	<wa-badge appearance="outlined" variant="neutral" size="medium">
+																		No parameter set
+																	</wa-badge>
 																{/if}
-															</select>
+															{/if}
 														</div>
 													{/each}
 												</div>
