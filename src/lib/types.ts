@@ -35,6 +35,7 @@ export interface Profile {
 export interface CsvData {
   headers: string[];
   rows: Record<string, string>[];
+  filename?: string;
 }
 
 export interface AppState {

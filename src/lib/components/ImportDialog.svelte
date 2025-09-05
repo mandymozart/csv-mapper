@@ -71,7 +71,10 @@
 
 	function handleImport() {
 		if (previewData) {
-			onImport(previewData);
+			onImport({
+				...previewData,
+				filename: fileName
+			});
 			handleClose();
 		}
 	}

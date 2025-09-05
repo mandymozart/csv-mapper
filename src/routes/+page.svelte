@@ -22,8 +22,6 @@
 	let inputCsv: CsvData | null = $state(null);
 	let outputCsv: CsvData | null = $state(null);
 	let activeView: ViewType = $state('profiles');
-	let isEditingProfile = $state(false);
-	let showImportDialog = $state(false);
 	let projectFileInput: HTMLInputElement;
 	let projectName = $state('');
 	let isEditingProjectName = $state(false);
@@ -215,20 +213,28 @@
 	<wa-tab-group placement="top" onwa-tab-show={(e: CustomEvent) => activeView = e.detail.name}>
 		<wa-tab slot="nav" panel="profiles" active={activeView === 'profiles'}>
 			<wa-icon name="user-group" slot="prefix"></wa-icon>
-			Profiles
+			Profiles&nbsp;
+			{#if currentProfile}
+				<wa-badge appearance="filled" variant="brand" pill size="small">{currentProfile.name}</wa-badge>
+			{/if}
 		</wa-tab>
 		{#if currentProfile}
 			<wa-tab slot="nav" panel="mappings" active={activeView === 'mappings'}>
 				<wa-icon name="table" slot="prefix"></wa-icon>
-				Mappings
+				Mappings&nbsp;
+				<wa-badge appearance="outlined" variant="neutral" pill size="small">{currentProfile.mappings.filter(m => m.isActive).length} / {currentProfile.mappings.length}</wa-badge>
 			</wa-tab>
 			<wa-tab slot="nav" panel="methods" active={activeView === 'methods'}>
 				<wa-icon name="code" slot="prefix"></wa-icon>
-				Methods
+				Methods&nbsp;
+				<wa-badge appearance="outlined" variant="neutral" pill size="small">{currentProfile.methods.length}</wa-badge>
 			</wa-tab>
 			<wa-tab slot="nav" panel="import" active={activeView === 'import'}>
 				<wa-icon name="upload" slot="prefix"></wa-icon>
-				Import CSV
+				Import CSV&nbsp;
+				<wa-badge appearance={inputCsv ? 'filled' : 'filled outlined'} pill variant={inputCsv ? 'success' : 'warning'} size="small">
+					{inputCsv ? (inputCsv.filename || 'Loaded') : 'None'}
+				</wa-badge>
 			</wa-tab>
 		{/if}
 		
@@ -294,11 +300,8 @@
 	}
 
 	.header {
-		background: hsl(0, 0%, 95%);
 		color: white;
-		padding: 1.5rem 2rem;
-		border-bottom: none;
-		box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+		padding: 1rem 1rem;
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-start;
