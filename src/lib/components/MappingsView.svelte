@@ -76,15 +76,17 @@
 		<div class="header-controls">
 			{#if inputCsv && inputCsv.rows.length > 0}
 				<div class="row-selector">
-					<label for="preview-row">Preview Row:</label>
-					<select id="preview-row" bind:value={selectedPreviewRow}>
+					<wa-select id="preview-row" label="Preview Row" value={selectedPreviewRow} oninput={(e: Event) => selectedPreviewRow = parseInt((e.target as HTMLSelectElement).value)}>
 						{#each inputCsv.rows as _, index}
-							<option value={index}>Row {index + 1}</option>
+							<wa-option value={index}>Row {index + 1}</wa-option>
 						{/each}
-					</select>
+					</wa-select>
 				</div>
 			{/if}
-			<button onclick={addMapping} class="add-mapping-btn">Add Mapping</button>
+			<wa-button onclick={addMapping} variant="primary">
+				<wa-icon slot="prefix" name="plus"></wa-icon>
+				Add Mapping
+			</wa-button>
 		</div>
 	</div>
 
@@ -107,17 +109,21 @@
 						<div class="input-section">
 							<div class="section-content">
 								<label>Source Column:</label>
-								<select 
-									bind:value={mapping.sourceColumn}
-									onchange={() => updateMapping(mapping.id, 'sourceColumn', mapping.sourceColumn)}
+								<wa-select 
+									label="Source Column"
+									value={mapping.sourceColumn}
+									oninput={(e: Event) => {
+										mapping.sourceColumn = (e.target as HTMLSelectElement).value;
+										updateMapping(mapping.id, 'sourceColumn', mapping.sourceColumn);
+									}}
 								>
-									<option value="">Select column...</option>
+									<wa-option value="">Select column...</wa-option>
 									{#if inputCsv}
 										{#each inputCsv.headers as header}
-											<option value={header}>{header}</option>
+											<wa-option value={header}>{header}</wa-option>
 										{/each}
 									{/if}
-								</select>
+								</wa-select>
 								
 								{#if mapping.sourceColumn && inputCsv}
 									<div class="preview-value">
@@ -132,37 +138,44 @@
 							<div class="section-content">
 								<div class="mapping-controls">
 									<label>
-										<input 
-											type="checkbox" 
-											bind:checked={mapping.isActive}
-											onchange={() => updateMapping(mapping.id, 'isActive', mapping.isActive)}
-										/>
+										<wa-checkbox 
+											checked={mapping.isActive}
+											oninput={(e: Event) => {
+												mapping.isActive = (e.target as HTMLInputElement).checked;
+												updateMapping(mapping.id, 'isActive', mapping.isActive);
+											}}
+										></wa-checkbox>
 										Active
 									</label>
-									<button 
+									<wa-button 
 										onclick={() => removeMapping(mapping.id)} 
-										class="remove-btn"
+										variant="text"
+										size="small"
 										title="Remove mapping"
 									>
-										×
-									</button>
+										<wa-icon name="x"></wa-icon>
+									</wa-button>
 								</div>
 
 								<label>Target Name (optional):</label>
-								<input 
-									type="text" 
-									bind:value={mapping.targetColumn}
-									onchange={() => updateMapping(mapping.id, 'targetColumn', mapping.targetColumn)}
+								<wa-input 
+									value={mapping.targetColumn}
+									oninput={(e: Event) => {
+										mapping.targetColumn = (e.target as HTMLInputElement).value;
+										updateMapping(mapping.id, 'targetColumn', mapping.targetColumn);
+									}}
 									placeholder="Leave empty to use original column name"
-								/>
+								></wa-input>
 
 								<label>Transformation (optional):</label>
-								<input 
-									type="text" 
-									bind:value={mapping.transformation}
-									onchange={() => updateMapping(mapping.id, 'transformation', mapping.transformation)}
+								<wa-input 
+									value={mapping.transformation}
+									oninput={(e: Event) => {
+										mapping.transformation = (e.target as HTMLInputElement).value;
+										updateMapping(mapping.id, 'transformation', mapping.transformation);
+									}}
 									placeholder="Leave empty to use original value"
-								/>
+								></wa-input>
 
 								<div class="transformation-help">
 									<small>

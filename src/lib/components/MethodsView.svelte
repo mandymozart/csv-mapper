@@ -137,7 +137,10 @@
 	<div class="methods-header">
 		<h3>Custom Methods</h3>
 		<div class="header-actions">
-			<button onclick={createMethod} class="create-method-btn">Add Method</button>
+			<wa-button onclick={createMethod} variant="primary">
+				<wa-icon slot="prefix" name="plus"></wa-icon>
+				Add Method
+			</wa-button>
 		</div>
 	</div>
 
@@ -159,13 +162,14 @@
 						>
 							<div class="method-name">{method.name}</div>
 							<div class="method-params">({method.parameters.join(', ')})</div>
-							<button 
+							<wa-button 
 								onclick={(e) => { e.stopPropagation(); deleteMethod(method.id); }}
-								class="delete-method-btn"
+								variant="text"
+								size="small"
 								title="Delete method"
 							>
-								×
-							</button>
+								<wa-icon name="x"></wa-icon>
+							</wa-button>
 						</div>
 					{/each}
 				</div>

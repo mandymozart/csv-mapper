@@ -61,33 +61,33 @@
 		<div class="header-left">
 			<h4>{title} ({data.rows.length} rows)</h4>
 			{#if collapsible}
-				<button class="collapse-btn" onclick={toggleCollapse}>
-					{isCollapsed ? '▶' : '▼'}
-				</button>
+				<wa-button variant="text" size="small" onclick={toggleCollapse}>
+				<wa-icon name={isCollapsed ? 'chevron-right' : 'chevron-down'}></wa-icon>
+			</wa-button>
 			{/if}
 		</div>
 		{#if !isCollapsed}
 			<div class="preview-controls">
 			<div class="row-selector">
 				<label for="startRow">Start row:</label>
-				<input 
-					id="startRow"
-					type="number" 
-					bind:value={previewStartRow}
-					min={minRow}
-					max={maxRow}
-					class="row-input"
-				/>
+				<wa-input 
+				id="startRow"
+				type="number" 
+				value={previewStartRow}
+				min={minRow}
+				max={maxRow}
+				oninput={(e: Event) => previewStartRow = parseInt((e.target as HTMLInputElement).value)}
+			></wa-input>
 			</div>
 			<div class="row-selector">
 				<label for="rowCount">Show:</label>
-				<select id="rowCount" bind:value={previewRowCount} class="row-select">
-					<option value={1}>1 row</option>
-					<option value={5}>5 rows</option>
-					<option value={10}>10 rows</option>
-					<option value={20}>20 rows</option>
-					<option value={50}>50 rows</option>
-				</select>
+				<wa-select id="rowCount" value={previewRowCount} oninput={(e: Event) => previewRowCount = parseInt((e.target as HTMLSelectElement).value)}>
+				<wa-option value={1}>1 row</wa-option>
+				<wa-option value={5}>5 rows</wa-option>
+				<wa-option value={10}>10 rows</wa-option>
+				<wa-option value={20}>20 rows</wa-option>
+				<wa-option value={50}>50 rows</wa-option>
+			</wa-select>
 			</div>
 			</div>
 		{/if}

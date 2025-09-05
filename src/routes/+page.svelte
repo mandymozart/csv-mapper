@@ -151,32 +151,60 @@
 	<header class="header">	
 		<div class="profile-section">
 			<div class="profile-selector">
-				<select bind:value={currentProfile}>
-					<option value={null}>Select a profile...</option>
+				<wa-select label="Profile" value={currentProfile?.id || ''} 
+					onchange={(e: Event) => {
+						const target = e.target as HTMLSelectElement;
+						const selectedId = target.value;
+						if (selectedId === '' || selectedId === null) {
+							currentProfile = null;
+						} else {
+							const foundProfile = profiles.find(p => p.id === selectedId);
+							currentProfile = foundProfile || null;
+						}
+					}}>
+					<wa-option value="">Select a profile...</wa-option>
 					{#each profiles as profile}
-						<option value={profile}>{profile.name}</option>
+						<wa-option value={profile.id}>{profile.name}</wa-option>
 					{/each}
-				</select>
-				<button onclick={createProfile}>New Profile</button>
+				</wa-select>
+				<wa-button variant="primary" onclick={createProfile}>
+					<wa-icon name="plus" slot="prefix"></wa-icon>
+					New Profile
+				</wa-button>
 			</div>
 
 			{#if currentProfile}
 				<div class="profile-info">
 					{#if isEditingProfile}
 						<div class="profile-edit">
-							<input 
-								bind:value={currentProfile.name} 
+							<wa-input 
+								label="Profile Name"
+								value={currentProfile?.name || ''} 
 								placeholder="Profile name"
+								oninput={(e: CustomEvent) => {
+									if (currentProfile) currentProfile.name = e.detail.value;
+								}}
 								class="profile-name-input"
-							/>
-							<textarea 
-								bind:value={currentProfile.description} 
+							></wa-input>
+							<wa-input 
+								label="Profile Description"
+								value={currentProfile?.description || ''} 
 								placeholder="Profile description"
+								oninput={(e: CustomEvent) => {
+									if (currentProfile) currentProfile.description = e.detail.value;
+								}}
 								class="profile-description-input"
-							></textarea>
+								type="textarea"
+							></wa-input>
 							<div class="profile-actions">
-								<button onclick={saveCurrentProfile} class="save-btn">Save</button>
-								<button onclick={() => isEditingProfile = false} class="cancel-btn">Cancel</button>
+								<wa-button variant="success" onclick={saveCurrentProfile}>
+									<wa-icon name="check" slot="prefix"></wa-icon>
+									Save
+								</wa-button>
+								<wa-button variant="default" onclick={() => isEditingProfile = false}>
+									<wa-icon name="x" slot="prefix"></wa-icon>
+									Cancel
+								</wa-button>
 							</div>
 						</div>
 					{:else}
@@ -184,8 +212,14 @@
 							<h2>{currentProfile.name}</h2>
 							<p>{currentProfile.description}</p>
 							<div class="profile-actions">
-								<button onclick={() => isEditingProfile = true} class="edit-btn">Edit</button>
-								<button onclick={() => currentProfile && deleteProfile(currentProfile)} class="delete-btn">Delete</button>
+								<wa-button variant="default" onclick={() => isEditingProfile = true}>
+									<wa-icon name="pencil" slot="prefix"></wa-icon>
+									Edit
+								</wa-button>
+								<wa-button variant="danger" onclick={() => currentProfile && deleteProfile(currentProfile)}>
+									<wa-icon name="trash" slot="prefix"></wa-icon>
+									Delete
+								</wa-button>
 							</div>
 						</div>
 					{/if}
