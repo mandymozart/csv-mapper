@@ -79,7 +79,6 @@
 
 <div class="mappings-view">
 	<div class="mappings-header">
-		<h3>Column Mappings</h3>
 		<div class="header-controls">
 			{#if inputCsv && inputCsv.rows.length > 0}
 				<div class="row-selector">
@@ -91,10 +90,6 @@
 					</select>
 				</div>
 			{/if}
-			<wa-button onclick={addMapping} variant="primary">
-				<wa-icon slot="prefix" name="plus"></wa-icon>
-				Add Mapping
-			</wa-button>
 		</div>
 	</div>
 
@@ -106,9 +101,9 @@
 		<div class="mappings-container">
 			<div class="mappings-grid">
 				<div class="grid-header">
-					<div class="input-section">Input Data</div>
-					<div class="mapping-section">Mapping Configuration</div>
-					<div class="output-section">Output Preview</div>
+					<div class="input-section">Input</div>
+					<div class="mapping-section">Config</div>
+					<div class="output-section">Output</div>
 				</div>
 
 				{#each profile.mappings as mapping (mapping.id)}
@@ -116,7 +111,6 @@
 						<!-- Input Section -->
 						<div class="input-section">
 							<div class="section-content">
-								<label>Source Column:</label>
 								{#if inputCsv}
 									<select 
 										value={mapping.sourceColumn || ''}
@@ -138,7 +132,7 @@
 								
 								{#if mapping.sourceColumn && inputCsv}
 									<div class="preview-value">
-										<strong>Sample:</strong> {getInputPreviewValue(mapping)}
+										{getInputPreviewValue(mapping)}
 									</div>
 								{/if}
 							</div>
@@ -263,22 +257,17 @@
 									</div>
 								{/if}
 
-								<div class="transformation-help">
-									<small>
-										Use &#123;COLUMN_NAME&#125; for column variables or methodName(args) for custom functions
-									</small>
-								</div>
 							</div>
 						</div>
 
 						<!-- Output Section -->
 						<div class="output-section">
 							<div class="section-content">
-								<label>Target: {getEffectiveTargetName(mapping)}</label>
+								<div class="preview-value">{getEffectiveTargetName(mapping)}</div>
 								
 								{#if mapping.isActive && mapping.sourceColumn}
 									<div class="preview-value">
-										<strong>Preview:</strong> {getOutputPreviewValue(mapping)}
+										{getOutputPreviewValue(mapping)}
 									</div>
 								{:else}
 									<div class="preview-value inactive-preview">
@@ -289,6 +278,13 @@
 						</div>
 					</div>
 				{/each}
+			</div>
+			
+			<div class="add-mapping-section">
+				<wa-button onclick={addMapping} variant="primary">
+					<wa-icon slot="prefix" name="plus"></wa-icon>
+					Add Mapping
+				</wa-button>
 			</div>
 		</div>
 	{/if}
@@ -362,17 +358,11 @@
 		background: white;
 	}
 
-	.add-mapping-btn {
-		background: #007bff;
-		color: white;
-		border: 1px solid #007bff;
-		padding: 0.5rem 1rem;
-		border-radius: 4px;
-		cursor: pointer;
-	}
-
-	.add-mapping-btn:hover {
-		background: #0056b3;
+	.add-mapping-section {
+		margin: 1rem;
+		padding: 1rem;
+		display: flex;
+		justify-content: center;
 	}
 
 	.empty-state {
@@ -448,24 +438,7 @@
 		margin-bottom: 0.5rem;
 	}
 
-	.remove-btn {
-		background: #dc3545;
-		color: white;
-		border: none;
-		width: 24px;
-		height: 24px;
-		border-radius: 50%;
-		cursor: pointer;
-		font-size: 16px;
-		line-height: 1;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
 
-	.remove-btn:hover {
-		background: #c82333;
-	}
 
 	label {
 		font-weight: 500;
