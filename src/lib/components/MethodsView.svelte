@@ -160,12 +160,6 @@
 	// Example methods for reference
 	const exampleMethods = [
 		{
-			name: 'convertCountryISOCodeToAccountNumber',
-			description: 'Convert country ISO code to account number based on business type',
-			code: '(countryCode, isBusiness) => {\n  const businessPrefix = isBusiness === "true" ? "B" : "P";\n  const countryMap = {\n    "US": "001",\n    "CA": "002",\n    "GB": "003",\n    "DE": "004",\n    "FR": "005"\n  };\n  return businessPrefix + (countryMap[countryCode] || "999");\n}',
-			parameters: ['countryCode', 'isBusiness']
-		},
-		{
 			name: 'formatFullName',
 			description: 'Combine first and last name with proper formatting',
 			code: '(firstName, lastName) => {\n  const first = (firstName || "").trim();\n  const last = (lastName || "").trim();\n  return [first, last].filter(Boolean).join(" ");\n}',

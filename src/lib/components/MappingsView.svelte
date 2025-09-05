@@ -91,7 +91,10 @@
 	}
 
 	function getEffectiveTargetName(mapping: ColumnMapping): string {
-		return mapping.targetColumn || mapping.sourceColumn || 'Unnamed';
+		if (mapping.hasCustomTarget && mapping.targetColumn) {
+			return mapping.targetColumn;
+		}
+		return mapping.sourceColumn || 'Unnamed';
 	}
 </script>
 

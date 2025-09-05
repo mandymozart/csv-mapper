@@ -1,12 +1,21 @@
 /**
  * Get padded account number with customer prefix
  * 
- * @param {string} billingCountryISO 
- * @param {string} shippingCountryISO 
+ * @param {string} customerNumber 
  * @returns {string}
  */
-const getPaddedAccount = (billingCountryISO, shippingCountryISO) => {
-    const accountNumber = getAccountNumber(billingCountryISO, shippingCountryISO);
-    // Replace first digit with "2" and pad to 6 digits
-    return `2${accountNumber.slice(1).padStart(5, '0')}`;
+const getPaddedAccount = (customerNumber) => {
+    const customerNumberStr = String(customerNumber);
+    console.log('getPaddedAccount received:', customerNumber, 'type:', typeof customerNumber);
+    console.log('Arguments length:', arguments.length);
+    console.log('All arguments:', Array.from(arguments));
+    
+    // Ensure we only use the first argument
+    const cleanNumber = String(arguments[0] || customerNumber);
+    
+    // Pad to exactly 5 digits
+    const paddedNumber = cleanNumber.padStart(5, '0');
+    console.log('Final padded result:', paddedNumber);
+    
+    return paddedNumber;
 };

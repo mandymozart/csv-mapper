@@ -91,6 +91,7 @@ export function transformCsvData(
     transformationMethod?: string;
     transformationParams?: string[];
     hasTransformation?: boolean;
+    hasCustomTarget?: boolean;
     isActive: boolean 
   }> = [],
   methods: Method[] = []
@@ -98,12 +99,12 @@ export function transformCsvData(
   const methodsMap = new Map(methods.map(m => [m.id, m]));
   
   // Get unique target columns from active mappings
-  // Use sourceColumn as default if targetColumn is empty
+  // Use sourceColumn as default if targetColumn is empty or hasCustomTarget is false
   const targetHeaders = Array.from(
     new Set(
       mappings
         .filter(m => m.isActive)
-        .map(m => m.targetColumn || m.sourceColumn)
+        .map(m => (m.hasCustomTarget && m.targetColumn) ? m.targetColumn : m.sourceColumn)
         .filter(Boolean)
     )
   );
@@ -116,8 +117,8 @@ export function transformCsvData(
     mappings.forEach(mapping => {
       if (!mapping.isActive || !mapping.sourceColumn) return;
       
-      // Use sourceColumn as targetColumn if targetColumn is empty
-      const targetColumn = mapping.targetColumn || mapping.sourceColumn;
+      // Use sourceColumn as targetColumn if targetColumn is empty or hasCustomTarget is false
+      const targetColumn = (mapping.hasCustomTarget && mapping.targetColumn) ? mapping.targetColumn : mapping.sourceColumn;
       
       let value = '';
       
