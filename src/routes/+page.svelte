@@ -220,36 +220,36 @@
 	</header>
 
 	{#if currentProfile}
-		<nav class="view-tabs">
-			<button 
-				class="tab {activeView === 'mappings' ? 'active' : ''}"
-				onclick={() => activeView = 'mappings'}
-			>
+		<wa-tab-group placement="top" onwa-tab-show={(e: CustomEvent) => activeView = e.detail.name}>
+			<wa-tab slot="nav" panel="mappings" active={activeView === 'mappings'}>
+				<wa-icon name="table" slot="prefix"></wa-icon>
 				Mappings
-			</button>
-			<button 
-				class="tab {activeView === 'methods' ? 'active' : ''}"
-				onclick={() => activeView = 'methods'}
-			>
+			</wa-tab>
+			<wa-tab slot="nav" panel="methods" active={activeView === 'methods'}>
+				<wa-icon name="code" slot="prefix"></wa-icon>
 				Methods
-			</button>
-		</nav>
-
-		<main class="main-content">
-			{#if activeView === 'mappings'}
-				<MappingsView 
-					bind:profile={currentProfile}
-					{inputCsv}
-					{outputCsv}
-					onUpdate={saveCurrentProfile}
-				/>
-			{:else}
-				<MethodsView 
-					bind:profile={currentProfile}
-					onUpdate={saveCurrentProfile}
-				/>
-			{/if}
-		</main>
+			</wa-tab>
+			
+			<wa-tab-panel name="mappings">
+				{#if activeView === 'mappings'}
+					<MappingsView 
+						bind:profile={currentProfile}
+						{inputCsv}
+						{outputCsv}
+						onUpdate={saveCurrentProfile}
+					/>
+				{/if}
+			</wa-tab-panel>
+			
+			<wa-tab-panel name="methods">
+				{#if activeView === 'methods'}
+					<MethodsView 
+						bind:profile={currentProfile}
+						onUpdate={saveCurrentProfile}
+					/>
+				{/if}
+			</wa-tab-panel>
+		</wa-tab-group>
 	{:else}
 		<div class="no-profile">
 			<p>Create or select a profile to get started</p>
@@ -280,7 +280,7 @@
 	}
 
 	.header {
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background: hsl(0, 0%, 95%);
 		color: white;
 		padding: 1.5rem 2rem;
 		border-bottom: none;
@@ -442,41 +442,18 @@
 		border-color: #28a745;
 	}
 
-	.view-tabs {
-		display: flex;
-		background: #f8f9fa;
-		border-bottom: 1px solid #dee2e6;
-		box-shadow: inset 0 -1px 0 #dee2e6;
+	/* WebAwesome tab styling */
+	wa-tab-group {
+		--wa-tab-group-background: #f8f9fa;
+		--wa-tab-background: transparent;
+		--wa-tab-color: #6c757d;
+		--wa-tab-active-color: #667eea;
+		--wa-tab-active-background: white;
+		--wa-tab-border-color: #dee2e6;
+		--wa-tab-active-border-color: #667eea;
 	}
 
-	.tab {
-		padding: 1rem 2rem;
-		border: none;
-		background: transparent;
-		border-bottom: 3px solid transparent;
-        border-radius: 0;
-		cursor: pointer;
-		font-weight: 500;
-		color: #6c757d;
-		transition: all 0.2s ease;
-	}
-
-	.tab:hover {
-		background: #e9ecef;
-		color: #495057;
-		transform: none;
-		box-shadow: none;
-	}
-
-	.tab.active {
-		border-bottom-color: #667eea;
-		background: white;
-		color: #667eea;
-		font-weight: 600;
-	}
-
-	.main-content {
-		flex: 1;
+	wa-tab-panel {
 		padding: 2rem;
 		background: #fafafa;
 		min-height: calc(100vh - 200px);
