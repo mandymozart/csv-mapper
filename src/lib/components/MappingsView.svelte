@@ -15,13 +15,20 @@
 	// Row selection for preview
 	let selectedPreviewRow = $state(0);
 
+	// Reset preview row when profile changes
+	$effect(() => {
+		if (profile) {
+			selectedPreviewRow = 0;
+		}
+	});
+
 	function addMapping() {
 		const newMapping: ColumnMapping = {
 			id: generateId(),
 			sourceColumn: '',
 			targetColumn: '',
 			transformation: '',
-			isActive: true
+			isActive: false
 		};
 		
 		// Initialize mappings array if it doesn't exist
@@ -76,11 +83,12 @@
 		<div class="header-controls">
 			{#if inputCsv && inputCsv.rows.length > 0}
 				<div class="row-selector">
-					<wa-select id="preview-row" label="Preview Row" value={selectedPreviewRow} oninput={(e: Event) => selectedPreviewRow = parseInt((e.target as HTMLSelectElement).value)}>
+					<label for="preview-row">Preview Row:</label>
+					<select id="preview-row" value={selectedPreviewRow} onchange={(e: Event) => selectedPreviewRow = parseInt((e.target as HTMLSelectElement).value)}>
 						{#each inputCsv.rows as _, index}
-							<wa-option value={index}>Row {index + 1}</wa-option>
+							<option value={index}>Row {index + 1}</option>
 						{/each}
-					</wa-select>
+					</select>
 				</div>
 			{/if}
 			<wa-button onclick={addMapping} variant="primary">
@@ -109,21 +117,20 @@
 						<div class="input-section">
 							<div class="section-content">
 								<label>Source Column:</label>
-								<wa-select 
-									label="Source Column"
-									value={mapping.sourceColumn}
-									oninput={(e: Event) => {
+								<select 
+									value={mapping.sourceColumn || ''}
+									onchange={(e: Event) => {
 										mapping.sourceColumn = (e.target as HTMLSelectElement).value;
 										updateMapping(mapping.id, 'sourceColumn', mapping.sourceColumn);
 									}}
 								>
-									<wa-option value="">Select column...</wa-option>
+									<option value="">Select column...</option>
 									{#if inputCsv}
 										{#each inputCsv.headers as header}
-											<wa-option value={header}>{header}</wa-option>
+											<option value={header}>{header}</option>
 										{/each}
 									{/if}
-								</wa-select>
+								</select>
 								
 								{#if mapping.sourceColumn && inputCsv}
 									<div class="preview-value">
@@ -138,13 +145,14 @@
 							<div class="section-content">
 								<div class="mapping-controls">
 									<label>
-										<wa-checkbox 
+										<input 
+											type="checkbox"
 											checked={mapping.isActive}
-											oninput={(e: Event) => {
+											onchange={(e: Event) => {
 												mapping.isActive = (e.target as HTMLInputElement).checked;
 												updateMapping(mapping.id, 'isActive', mapping.isActive);
 											}}
-										></wa-checkbox>
+										/>
 										Active
 									</label>
 									<wa-button 
@@ -158,24 +166,26 @@
 								</div>
 
 								<label>Target Name (optional):</label>
-								<wa-input 
-									value={mapping.targetColumn}
-									oninput={(e: Event) => {
+								<input 
+									type="text"
+									value={mapping.targetColumn || ''}
+									onchange={(e: Event) => {
 										mapping.targetColumn = (e.target as HTMLInputElement).value;
 										updateMapping(mapping.id, 'targetColumn', mapping.targetColumn);
 									}}
 									placeholder="Leave empty to use original column name"
-								></wa-input>
+								/>
 
 								<label>Transformation (optional):</label>
-								<wa-input 
-									value={mapping.transformation}
-									oninput={(e: Event) => {
+								<input 
+									type="text"
+									value={mapping.transformation || ''}
+									onchange={(e: Event) => {
 										mapping.transformation = (e.target as HTMLInputElement).value;
 										updateMapping(mapping.id, 'transformation', mapping.transformation);
 									}}
 									placeholder="Leave empty to use original value"
-								></wa-input>
+								/>
 
 								<div class="transformation-help">
 									<small>

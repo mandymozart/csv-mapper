@@ -151,7 +151,8 @@
 	<header class="header">	
 		<div class="profile-section">
 			<div class="profile-selector">
-				<wa-select label="Profile" value={currentProfile?.id || ''} 
+				<label for="profile-select">Profile:</label>
+				<select id="profile-select" value={currentProfile?.id || ''} 
 					onchange={(e: Event) => {
 						const target = e.target as HTMLSelectElement;
 						const selectedId = target.value;
@@ -162,11 +163,11 @@
 							currentProfile = foundProfile || null;
 						}
 					}}>
-					<wa-option value="">Select a profile...</wa-option>
+					<option value="">Select a profile...</option>
 					{#each profiles as profile}
-						<wa-option value={profile.id}>{profile.name}</wa-option>
+						<option value={profile.id}>{profile.name}</option>
 					{/each}
-				</wa-select>
+				</select>
 				<wa-button variant="primary" onclick={createProfile}>
 					<wa-icon name="plus" slot="prefix"></wa-icon>
 					New Profile
