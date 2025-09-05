@@ -21,10 +21,13 @@
 	let currentProfile: Profile | null = $state(null);
 	let inputCsv: CsvData | null = $state(null);
 	let outputCsv: CsvData | null = $state(null);
-	let activeView: ViewType = $state('mappings');
+	let activeView: ViewType = $state('profiles');
 	let isEditingProfile = $state(false);
 	let showImportDialog = $state(false);
 	let projectFileInput: HTMLInputElement;
+	let projectName = $state('');
+	let isEditingProjectName = $state(false);
+	let tempProjectName = $state('');
 
 	onMount(() => {
 		loadData();
@@ -42,6 +45,50 @@
 			currentProfile = profiles[0];
 			saveCurrentProfileId(currentProfile.id);
 		}
+		
+		// Load project name from localStorage
+		projectName = loadProjectName();
+	}
+	
+	function saveProjectName() {
+		try {
+			localStorage.setItem('csv-mapper-project-name', projectName);
+		} catch (error) {
+			console.error('Failed to save project name:', error);
+		}
+	}
+	
+	function loadProjectName(): string {
+		try {
+			return localStorage.getItem('csv-mapper-project-name') || '';
+		} catch (error) {
+			console.error('Failed to load project name:', error);
+			return '';
+		}
+	}
+	
+	function startEditingProjectName() {
+		tempProjectName = projectName || '';
+		isEditingProjectName = true;
+	}
+	
+	function saveProjectNameEdit() {
+		console.log('Save clicked, tempProjectName:', tempProjectName);
+		const newName = (tempProjectName || '').trim();
+		console.log('Trimmed name:', newName);
+		if (newName) {
+			projectName = newName;
+			console.log('Setting projectName to:', projectName);
+			saveProjectName();
+			isEditingProjectName = false;
+		} else {
+			console.log('Name is empty, staying in edit mode');
+		}
+	}
+	
+	function cancelProjectNameEdit() {
+		tempProjectName = projectName || '';
+		isEditingProjectName = false;
 	}
 
 	function createProfile() {
@@ -109,7 +156,8 @@
 	}
 
 	function downloadProject() {
-		exportProject(profiles);
+		const filename = (projectName || '').trim() || 'csv-mapper-project';
+		exportProject(profiles, filename);
 	}
 
 	function loadProject() {
@@ -125,6 +173,11 @@
 			const result = importProject(content);
 			
 			if (result.success) {
+				// Extract filename without extension and set as project name
+				const fileName = file.name.replace(/\.[^/.]+$/, ''); // Remove file extension
+				projectName = fileName;
+				saveProjectName(); // Save to localStorage
+				
 				// Reload data after successful import
 				loadData();
 				alert(result.message);
@@ -148,83 +201,32 @@
 </script>
 
 <div class="csv-mapper">
-	<header class="header">	
-		<div class="profile-section">
-			<div class="profile-selector">
-				<label for="profile-select">Profile:</label>
-				<select id="profile-select" value={currentProfile?.id || ''} 
-					onchange={(e: Event) => {
-						const target = e.target as HTMLSelectElement;
-						const selectedId = target.value;
-						if (selectedId === '' || selectedId === null) {
-							currentProfile = null;
-						} else {
-							const foundProfile = profiles.find(p => p.id === selectedId);
-							currentProfile = foundProfile || null;
-						}
-					}}>
-					<option value="">Select a profile...</option>
-					{#each profiles as profile}
-						<option value={profile.id}>{profile.name}</option>
-					{/each}
-				</select>
-				<wa-button variant="primary" onclick={createProfile}>
-					<wa-icon name="plus" slot="prefix"></wa-icon>
-					New Profile
-				</wa-button>
-			</div>
-
-			{#if currentProfile}
-				<div class="profile-info">
-					{#if isEditingProfile}
-						<div class="profile-edit">
-							<wa-input 
-								label="Profile Name"
-								value={currentProfile?.name || ''} 
-								placeholder="Profile name"
-								oninput={(e: CustomEvent) => {
-									if (currentProfile) currentProfile.name = e.detail.value;
-								}}
-								class="profile-name-input"
-							></wa-input>
-							<wa-input 
-								label="Profile Description"
-								value={currentProfile?.description || ''} 
-								placeholder="Profile description"
-								oninput={(e: CustomEvent) => {
-									if (currentProfile) currentProfile.description = e.detail.value;
-								}}
-								class="profile-description-input"
-								type="textarea"
-							></wa-input>
-							<div class="profile-actions">
-								<wa-button variant="success" onclick={saveCurrentProfile}>
-									<wa-icon name="check" slot="prefix"></wa-icon>
-									Save
-								</wa-button>
-								<wa-button variant="default" onclick={() => isEditingProfile = false}>
-									<wa-icon name="x" slot="prefix"></wa-icon>
-									Cancel
-								</wa-button>
-							</div>
-						</div>
-					{:else}
-						<div class="profile-display">
-							<h2>{currentProfile.name}</h2>
-							<p>{currentProfile.description}</p>
-							<div class="profile-actions">
-								<wa-button variant="default" onclick={() => isEditingProfile = true}>
-									<wa-icon name="pencil" slot="prefix"></wa-icon>
-									Edit
-								</wa-button>
-								<wa-button variant="danger" onclick={() => currentProfile && deleteProfile(currentProfile)}>
-									<wa-icon name="trash" slot="prefix"></wa-icon>
-									Delete
-								</wa-button>
-							</div>
-						</div>
-					{/if}
+	<header class="header">
+		<div class="project-info">
+			{#if isEditingProjectName}
+				<div class="project-name-edit">
+					<input 
+						bind:value={tempProjectName} 
+						placeholder="Enter project name"
+						class="project-name-input-edit"
+						type="text"
+					/>
+					<div class="project-name-actions">
+						<wa-button variant="success" size="small" onclick={saveProjectNameEdit}>
+							<wa-icon name="check" slot="prefix"></wa-icon>
+							Save
+						</wa-button>
+						<wa-button variant="default" size="small" onclick={cancelProjectNameEdit}>
+							<wa-icon name="x" slot="prefix"></wa-icon>
+							Cancel
+						</wa-button>
+					</div>
 				</div>
+			{:else}
+				<h1 class="project-name" onclick={startEditingProjectName}>
+					{projectName || 'Untitled Project'}
+					<wa-icon name="pencil" class="edit-icon"></wa-icon>
+				</h1>
 			{/if}
 		</div>
 
@@ -238,12 +240,6 @@
 					<wa-icon name="download" slot="prefix"></wa-icon>
 					Export Project
 				</wa-button>
-			</div>
-			<div class="csv-actions">
-				<wa-button variant="primary" onclick={() => showImportDialog = true}>
-					<wa-icon name="upload" slot="prefix"></wa-icon>
-					Import CSV
-				</wa-button>
 				{#if outputCsv}
 					<wa-button variant="success" onclick={downloadOutput}>
 						<wa-icon name="file-arrow-down" slot="prefix"></wa-icon>
@@ -254,8 +250,12 @@
 		</div>
 	</header>
 
-	{#if currentProfile}
-		<wa-tab-group placement="top" onwa-tab-show={(e: CustomEvent) => activeView = e.detail.name}>
+	<wa-tab-group placement="top" onwa-tab-show={(e: CustomEvent) => activeView = e.detail.name}>
+		<wa-tab slot="nav" panel="profiles" active={activeView === 'profiles'}>
+			<wa-icon name="user-group" slot="prefix"></wa-icon>
+			Profiles
+		</wa-tab>
+		{#if currentProfile}
 			<wa-tab slot="nav" panel="mappings" active={activeView === 'mappings'}>
 				<wa-icon name="table" slot="prefix"></wa-icon>
 				Mappings
@@ -264,7 +264,98 @@
 				<wa-icon name="code" slot="prefix"></wa-icon>
 				Methods
 			</wa-tab>
-			
+			<wa-tab slot="nav" panel="import" active={activeView === 'import'}>
+				<wa-icon name="upload" slot="prefix"></wa-icon>
+				Import CSV
+			</wa-tab>
+		{/if}
+		
+		<wa-tab-panel name="profiles">
+			<div class="profile-section">
+				<div class="profile-selector">
+					<label for="profile-select">Profile:</label>
+					<select id="profile-select" value={currentProfile?.id || ''} 
+						onchange={(e: Event) => {
+							const target = e.target as HTMLSelectElement;
+							const selectedId = target.value;
+							if (selectedId === '' || selectedId === null) {
+								currentProfile = null;
+							} else {
+								const foundProfile = profiles.find(p => p.id === selectedId);
+								currentProfile = foundProfile || null;
+							}
+						}}>
+						<option value="">Select a profile...</option>
+						{#each profiles as profile}
+							<option value={profile.id}>{profile.name}</option>
+						{/each}
+					</select>
+					<wa-button variant="primary" onclick={createProfile}>
+						<wa-icon name="plus" slot="prefix"></wa-icon>
+						New Profile
+					</wa-button>
+				</div>
+
+				{#if currentProfile}
+					<div class="profile-info">
+						{#if isEditingProfile}
+							<div class="profile-edit">
+								<wa-input 
+									label="Profile Name"
+									value={currentProfile?.name || ''} 
+									placeholder="Profile name"
+									oninput={(e: CustomEvent) => {
+										if (currentProfile) currentProfile.name = e.detail.value;
+									}}
+									class="profile-name-input"
+								></wa-input>
+								<wa-input 
+									label="Profile Description"
+									value={currentProfile?.description || ''} 
+									placeholder="Profile description"
+									oninput={(e: CustomEvent) => {
+										if (currentProfile) currentProfile.description = e.detail.value;
+									}}
+									class="profile-description-input"
+									type="textarea"
+								></wa-input>
+								<div class="profile-actions">
+									<wa-button variant="success" onclick={saveCurrentProfile}>
+										<wa-icon name="check" slot="prefix"></wa-icon>
+										Save
+									</wa-button>
+									<wa-button variant="default" onclick={() => isEditingProfile = false}>
+										<wa-icon name="x" slot="prefix"></wa-icon>
+										Cancel
+									</wa-button>
+								</div>
+							</div>
+						{:else}
+							<div class="profile-display">
+								<h2>{currentProfile.name}</h2>
+								<p>{currentProfile.description}</p>
+								<div class="profile-actions">
+									<wa-button variant="default" onclick={() => isEditingProfile = true}>
+										<wa-icon name="pencil" slot="prefix"></wa-icon>
+										Edit
+									</wa-button>
+									<wa-button variant="danger" onclick={() => currentProfile && deleteProfile(currentProfile)}>
+										<wa-icon name="trash" slot="prefix"></wa-icon>
+										Delete
+									</wa-button>
+								</div>
+							</div>
+						{/if}
+					</div>
+				{:else}
+					<div class="no-profile">
+						<p>Create or select a profile to get started</p>
+					</div>
+				{/if}
+			</div>
+		</wa-tab-panel>
+		
+		{#if currentProfile}
 			<wa-tab-panel name="mappings">
 				{#if activeView === 'mappings'}
 					<MappingsView 
@@ -284,19 +375,21 @@
 					/>
 				{/if}
 			</wa-tab-panel>
-		</wa-tab-group>
-	{:else}
-		<div class="no-profile">
-			<p>Create or select a profile to get started</p>
-		</div>
-	{/if}
+			
+			<wa-tab-panel name="import">
+				{#if activeView === 'import'}
+					<ImportDialog 
+						isOpen={true}
+						onClose={() => activeView = 'mappings'}
+						onImport={handleCsvImport}
+						inline={true}
+					/>
+				{/if}
+			</wa-tab-panel>
+		{/if}
+	</wa-tab-group>
 </div>
 
-<ImportDialog 
-	isOpen={showImportDialog}
-	onClose={() => showImportDialog = false}
-	onImport={handleCsvImport}
-/>
 
 <!-- Hidden file input for project import -->
 <input 
@@ -327,9 +420,58 @@
 		flex-wrap: wrap;
 	}
 
-	.profile-section {
+	.project-info {
 		flex: 1;
 		min-width: 300px;
+	}
+
+	.project-name {
+		margin: 0;
+		font-size: 1.5rem;
+		font-weight: 600;
+		color: #333;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem;
+		border-radius: 4px;
+		transition: background-color 0.2s ease;
+	}
+	
+	.project-name:hover {
+		background-color: rgba(0, 0, 0, 0.05);
+	}
+	
+	.project-name .edit-icon {
+		opacity: 0;
+		transition: opacity 0.2s ease;
+		font-size: 0.8rem;
+	}
+	
+	.project-name:hover .edit-icon {
+		opacity: 0.6;
+	}
+	
+	.project-name-edit {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	
+	.project-name-input-edit {
+		width: 300px;
+	}
+	
+	.project-name-actions {
+		display: flex;
+		gap: 0.25rem;
+	}
+
+	.profile-section {
+		padding: 2rem;
+		max-width: 800px;
+		margin: 0 auto;
 	}
 
 	.profile-selector {

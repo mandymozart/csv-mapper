@@ -7,6 +7,7 @@
 		isOpen: boolean;
 		onClose: () => void;
 		onImport: (data: CsvData) => void;
+		inline?: boolean;
 	}
 
 	let { isOpen, onClose, onImport }: Props = $props();

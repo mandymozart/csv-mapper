@@ -55,4 +55,4 @@ export interface CsvParseOptions {
 }
 
 // Utility types
-export type ViewType = 'mappings' | 'methods';
+export type ViewType = 'profiles' | 'mappings' | 'methods' | 'import';

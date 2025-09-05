@@ -79,9 +79,9 @@ export function generateId(): string {
 /**
  * Export all profiles as a project file
  */
-export function exportProject(profiles: Profile[]): void {
+export function exportProject(profiles: Profile[], customName?: string): void {
   console.log('exportProject called with profiles:', profiles);
-  const defaultName = `csv-mapper-project-${new Date().toISOString().split('T')[0]}`;
+  const defaultName = customName || `csv-mapper-project-${new Date().toISOString().split('T')[0]}`;
   console.log('Default filename:', defaultName);
   
   // Try prompt with timeout fallback
