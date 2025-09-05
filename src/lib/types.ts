@@ -6,6 +6,8 @@ export interface Method {
   description?: string;
   code: string; // JavaScript function code
   parameters: string[]; // Parameter names for the function
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ColumnMapping {

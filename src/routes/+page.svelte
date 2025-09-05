@@ -7,7 +7,7 @@
 	import ImportDialog from '$lib/components/ImportDialog.svelte';
 	import MappingsView from '$lib/components/MappingsView.svelte';
 	import MethodsView from '$lib/components/MethodsView.svelte';
-	
+	import ProfilesView from '$lib/components/ProfilesView.svelte';
 	// Import WebAwesome styles and components
 	import '@awesome.me/webawesome/dist/styles/themes/default.css';
 	import '@awesome.me/webawesome/dist/components/button/button.js';
@@ -91,48 +91,10 @@
 		isEditingProjectName = false;
 	}
 
-	function createProfile() {
-		const newProfile = createNewProfile();
-		profiles = [...profiles, newProfile];
-		currentProfile = newProfile;
-		saveProfiles(profiles);
-		saveCurrentProfileId(newProfile.id);
-		isEditingProfile = true;
-	}
-
-	function selectProfile(profile: Profile) {
-		currentProfile = profile;
-		saveCurrentProfileId(profile.id);
-	}
-
-	function saveCurrentProfile() {
-		if (!currentProfile) return;
-		
-		// Create a new profile object to avoid mutation issues
-		const updatedProfile = {
-			...currentProfile,
-			updatedAt: new Date().toISOString()
-		};
-		
-		const index = profiles.findIndex(p => p.id === currentProfile!.id);
-		if (index >= 0) {
-			profiles[index] = updatedProfile;
-			profiles = [...profiles];
-			currentProfile = updatedProfile;
+	function updateCurrentProfile() {
+		if (currentProfile) {
+			currentProfile.updatedAt = new Date().toISOString();
 			saveProfiles(profiles);
-		}
-		isEditingProfile = false;
-	}
-
-	function deleteProfile(profile: Profile) {
-		if (confirm(`Are you sure you want to delete "${profile.name}"?`)) {
-			profiles = profiles.filter(p => p.id !== profile.id);
-			saveProfiles(profiles);
-			
-			if (currentProfile?.id === profile.id) {
-				currentProfile = profiles.length > 0 ? profiles[0] : null;
-				saveCurrentProfileId(currentProfile?.id || null);
-			}
 		}
 	}
 
@@ -271,88 +233,12 @@
 		{/if}
 		
 		<wa-tab-panel name="profiles">
-			<div class="profile-section">
-				<div class="profile-selector">
-					<label for="profile-select">Profile:</label>
-					<select id="profile-select" value={currentProfile?.id || ''} 
-						onchange={(e: Event) => {
-							const target = e.target as HTMLSelectElement;
-							const selectedId = target.value;
-							if (selectedId === '' || selectedId === null) {
-								currentProfile = null;
-							} else {
-								const foundProfile = profiles.find(p => p.id === selectedId);
-								currentProfile = foundProfile || null;
-							}
-						}}>
-						<option value="">Select a profile...</option>
-						{#each profiles as profile}
-							<option value={profile.id}>{profile.name}</option>
-						{/each}
-					</select>
-					<wa-button variant="primary" onclick={createProfile}>
-						<wa-icon name="plus" slot="prefix"></wa-icon>
-						New Profile
-					</wa-button>
-				</div>
-
-				{#if currentProfile}
-					<div class="profile-info">
-						{#if isEditingProfile}
-							<div class="profile-edit">
-								<wa-input 
-									label="Profile Name"
-									value={currentProfile?.name || ''} 
-									placeholder="Profile name"
-									oninput={(e: CustomEvent) => {
-										if (currentProfile) currentProfile.name = e.detail.value;
-									}}
-									class="profile-name-input"
-								></wa-input>
-								<wa-input 
-									label="Profile Description"
-									value={currentProfile?.description || ''} 
-									placeholder="Profile description"
-									oninput={(e: CustomEvent) => {
-										if (currentProfile) currentProfile.description = e.detail.value;
-									}}
-									class="profile-description-input"
-									type="textarea"
-								></wa-input>
-								<div class="profile-actions">
-									<wa-button variant="success" onclick={saveCurrentProfile}>
-										<wa-icon name="check" slot="prefix"></wa-icon>
-										Save
-									</wa-button>
-									<wa-button variant="default" onclick={() => isEditingProfile = false}>
-										<wa-icon name="x" slot="prefix"></wa-icon>
-										Cancel
-									</wa-button>
-								</div>
-							</div>
-						{:else}
-							<div class="profile-display">
-								<h2>{currentProfile.name}</h2>
-								<p>{currentProfile.description}</p>
-								<div class="profile-actions">
-									<wa-button variant="default" onclick={() => isEditingProfile = true}>
-										<wa-icon name="pencil" slot="prefix"></wa-icon>
-										Edit
-									</wa-button>
-									<wa-button variant="danger" onclick={() => currentProfile && deleteProfile(currentProfile)}>
-										<wa-icon name="trash" slot="prefix"></wa-icon>
-										Delete
-									</wa-button>
-								</div>
-							</div>
-						{/if}
-					</div>
-				{:else}
-					<div class="no-profile">
-						<p>Create or select a profile to get started</p>
-					</div>
-				{/if}
-			</div>
+			<ProfilesView 
+				{profiles} 
+				{currentProfile} 
+				onProfileSelect={(profile) => currentProfile = profile}
+				onProfileUpdate={() => saveProfiles(profiles)}
+			/>
 		</wa-tab-panel>
 		
 		{#if currentProfile}
@@ -362,7 +248,7 @@
 						bind:profile={currentProfile}
 						{inputCsv}
 						{outputCsv}
-						onUpdate={saveCurrentProfile}
+						onUpdate={updateCurrentProfile}
 					/>
 				{/if}
 			</wa-tab-panel>
@@ -371,7 +257,7 @@
 				{#if activeView === 'methods'}
 					<MethodsView 
 						bind:profile={currentProfile}
-						onUpdate={saveCurrentProfile}
+						onUpdate={updateCurrentProfile}
 					/>
 				{/if}
 			</wa-tab-panel>
@@ -628,12 +514,122 @@
 		min-height: calc(100vh - 200px);
 	}
 
+	/* Profiles Layout */
+	.profiles-layout {
+		display: flex;
+		height: calc(100vh - 200px);
+		gap: 0;
+	}
+
+	.profiles-sidebar {
+		width: 300px;
+		background: white;
+		border-right: 1px solid #dee2e6;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.profiles-header {
+		padding: 1rem;
+		border-bottom: 1px solid #dee2e6;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		background: #f8f9fa;
+	}
+
+	.profiles-header h3 {
+		margin: 0;
+		color: #495057;
+		font-size: 1.1rem;
+		font-weight: 600;
+	}
+
+	.profiles-list {
+		flex: 1;
+		overflow-y: auto;
+	}
+
+	.profile-item {
+		width: 100%;
+		padding: 0.75rem 1rem;
+		border: none;
+		border-bottom: 1px solid #f1f3f4;
+		background: transparent;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		text-align: left;
+	}
+
+	.profile-item:hover {
+		background: #f8f9fa;
+	}
+
+	.profile-item.active {
+		background: #e3f2fd;
+		border-left: 3px solid #667eea;
+	}
+
+	.profile-item-content {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.profile-name {
+		font-weight: 500;
+		color: #212529;
+		font-size: 0.9rem;
+	}
+
+	.profile-description {
+		font-size: 0.8rem;
+		color: #6c757d;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.empty-profiles {
+		padding: 2rem 1rem;
+		text-align: center;
+		color: #6c757d;
+	}
+
+	.empty-profiles p {
+		margin: 0.5rem 0;
+	}
+
+	.empty-hint {
+		font-size: 0.85rem;
+		opacity: 0.8;
+	}
+
+	.profile-details {
+		flex: 1;
+		padding: 2rem;
+		background: #fafafa;
+		overflow-y: auto;
+	}
+
 	.no-profile {
 		flex: 1;
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		color: #666;
 		font-size: 1.1rem;
+		text-align: center;
+	}
+
+	.no-profile h3 {
+		margin: 0.5rem 0;
+		color: #495057;
+	}
+
+	.no-profile p {
+		margin: 0;
+		color: #6c757d;
 	}
 </style>

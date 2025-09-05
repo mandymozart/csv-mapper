@@ -100,6 +100,7 @@
 
 <div class="mappings-view">
 	<div class="mappings-header">
+		<h3>Mappings</h3>
 		<div class="header-controls">
 			{#if inputCsv && inputCsv.rows.length > 0}
 				<div class="row-selector">

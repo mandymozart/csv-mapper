@@ -2,7 +2,6 @@
 	import type { Profile, Method } from '../types';
 	import { validateMethodCode } from '../utils/transformation';
 	import { generateId } from '../utils/helpers';
-	import { parseAllFunctionFiles } from '../utils/functionParser';
 
 	interface Props {
 		profile: Profile;
@@ -95,34 +94,6 @@
 		newMethodCode = '';
 	}
 
-	async function importPresetMethods() {
-		try {
-			const presetMethods = await parseAllFunctionFiles();
-			if (presetMethods.length === 0) {
-				alert('No preset methods found to import');
-				return;
-			}
-
-			// Check for existing methods to avoid duplicates
-			const existingIds = new Set(profile.methods.map(m => m.id));
-			const newMethods = presetMethods.filter(m => !existingIds.has(m.id));
-
-			if (newMethods.length === 0) {
-				alert('All preset methods are already imported');
-				return;
-			}
-
-			profile.methods.push(...newMethods);
-			profile = { ...profile };
-			onUpdate();
-
-			alert(`Successfully imported ${newMethods.length} preset methods`);
-		} catch (error) {
-			console.error('Error importing preset methods:', error);
-			alert('Failed to import preset methods');
-		}
-	}
-
 	function deleteMethod(methodId: string) {
 		const method = profile.methods.find(m => m.id === methodId);
 		if (!method) return;
@@ -193,8 +164,7 @@
 	<div class="methods-header">
 		<h3>Custom Methods</h3>
 		<div class="header-actions">
-			<wa-button onclick={createMethod}>Create Method</wa-button>
-			<wa-button onclick={importPresetMethods} style="margin-left: 10px;">Import Presets</wa-button>
+			<wa-button onclick={createMethod}>New</wa-button>
 		</div>
 	</div>
 
