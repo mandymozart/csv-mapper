@@ -73,6 +73,8 @@
 				editingMethod = null;
 			}
 			
+			// Force reactivity update
+			profile = { ...profile };
 			onUpdate();
 		}
 	}

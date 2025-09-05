@@ -77,48 +77,93 @@ export function generateId(): string {
 }
 
 /**
- * Export profile as JSON file
+ * Export all profiles as a project file
  */
-export function exportProfile(profile: Profile): void {
-  const dataStr = JSON.stringify(profile, null, 2);
-  const blob = new Blob([dataStr], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+export function exportProject(profiles: Profile[]): void {
+  console.log('exportProject called with profiles:', profiles);
+  const defaultName = `csv-mapper-project-${new Date().toISOString().split('T')[0]}`;
+  console.log('Default filename:', defaultName);
   
-  link.href = url;
-  link.download = `${profile.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_profile.json`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  // Try prompt with timeout fallback
+  let fileName: string | null = null;
+  try {
+    fileName = prompt('Enter filename for the project export:', defaultName);
+    console.log('User entered filename:', fileName);
+  } catch (error) {
+    console.warn('Prompt failed, using default filename:', error);
+    fileName = defaultName;
+  }
+  
+  // If prompt returns null (cancelled), use default filename
+  if (fileName === null) {
+    console.log('Prompt returned null, using default filename');
+    fileName = defaultName;
+  }
+  
+  // Ensure we have a filename
+  if (!fileName || fileName.trim() === '') {
+    fileName = defaultName;
+  }
+  
+  // Ensure .json extension
+  const finalFileName = fileName.endsWith('.json') ? fileName : `${fileName}.json`;
+  console.log('Final filename:', finalFileName);
+  
+  const projectData = {
+    name: 'CSV Mapper Project',
+    version: '1.0.0',
+    exportedAt: new Date().toISOString(),
+    profiles: profiles
+  };
+
+  const jsonString = JSON.stringify(projectData, null, 2);
+  console.log('About to call downloadFile with:', { finalFileName, contentLength: jsonString.length });
+  downloadFile(jsonString, finalFileName, 'application/json');
 }
 
 /**
- * Import profile from JSON file
+ * Import profiles from a project file
  */
-export function importProfile(file: File): Promise<Profile> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+export function importProject(projectData: string): { success: boolean; message: string; profileCount?: number } {
+  try {
+    const project = JSON.parse(projectData);
     
-    reader.onload = (e) => {
-      try {
-        const profileData = JSON.parse(e.target?.result as string);
-        
-        // Validate profile structure
-        if (!profileData.id || !profileData.name) {
-          throw new Error('Invalid profile format');
-        }
-        
-        // Update timestamps
-        profileData.updatedAt = new Date().toISOString();
-        
-        resolve(profileData as Profile);
-      } catch (error) {
-        reject(new Error('Failed to parse profile file'));
+    if (!project.profiles || !Array.isArray(project.profiles)) {
+      return { success: false, message: 'Invalid project file format' };
+    }
+
+    // Validate profile structure
+    for (const profile of project.profiles) {
+      if (!profile.id || !profile.name || !profile.createdAt) {
+        return { success: false, message: 'Invalid profile structure in project file' };
       }
-    };
+    }
+
+    // Save the imported profiles
+    saveProfiles(project.profiles);
     
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsText(file);
-  });
+    return { 
+      success: true, 
+      message: `Successfully imported ${project.profiles.length} profiles`,
+      profileCount: project.profiles.length
+    };
+  } catch (error) {
+    return { success: false, message: 'Failed to parse project file' };
+  }
+}
+
+/**
+ * Download a file with given content and filename
+ */
+export function downloadFile(content: string, filename: string, mimeType: string = 'application/json') {
+    console.log('File downloaded successfully');
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }

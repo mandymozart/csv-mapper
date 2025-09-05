@@ -1,12 +1,21 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { Profile, CsvData, ViewType } from '$lib/types';
-	import { loadProfiles, saveProfiles, loadCurrentProfileId, saveCurrentProfileId, createNewProfile, generateId } from '$lib/utils/storage';
+	import { loadProfiles, saveProfiles, loadCurrentProfileId, saveCurrentProfileId, createNewProfile, exportProject, importProject, downloadFile } from '$lib/utils/storage';
 	import { downloadCsv } from '$lib/utils/csv';
 	import { transformCsvData } from '$lib/utils/transformation';
+	import ImportDialog from '$lib/components/ImportDialog.svelte';
 	import MappingsView from '$lib/components/MappingsView.svelte';
 	import MethodsView from '$lib/components/MethodsView.svelte';
-	import ImportDialog from '$lib/components/ImportDialog.svelte';
+	
+	// Import WebAwesome styles and components
+	import '@awesome.me/webawesome/dist/styles/themes/default.css';
+	import '@awesome.me/webawesome/dist/components/button/button.js';
+	import '@awesome.me/webawesome/dist/components/input/input.js';
+	import '@awesome.me/webawesome/dist/components/icon/icon.js';
+	import '@awesome.me/webawesome/dist/components/tab-group/tab-group.js';
+	import '@awesome.me/webawesome/dist/components/tab/tab.js';
+	import '@awesome.me/webawesome/dist/components/tab-panel/tab-panel.js';
 
 	let profiles: Profile[] = $state([]);
 	let currentProfile: Profile | null = $state(null);
@@ -15,6 +24,7 @@
 	let activeView: ViewType = $state('mappings');
 	let isEditingProfile = $state(false);
 	let showImportDialog = $state(false);
+	let projectFileInput: HTMLInputElement;
 
 	onMount(() => {
 		loadData();
@@ -98,6 +108,37 @@
 		downloadCsv(outputCsv, `${currentProfile?.name || 'output'}_mapped.csv`);
 	}
 
+	function downloadProject() {
+		exportProject(profiles);
+	}
+
+	function loadProject() {
+		projectFileInput.click();
+	}
+
+	async function handleProjectFileSelect(event: Event) {
+		const file = (event.target as HTMLInputElement).files?.[0];
+		if (!file) return;
+
+		try {
+			const content = await file.text();
+			const result = importProject(content);
+			
+			if (result.success) {
+				// Reload data after successful import
+				loadData();
+				alert(result.message);
+			} else {
+				alert(`Import failed: ${result.message}`);
+			}
+		} catch (error) {
+			alert('Failed to read project file');
+		}
+
+		// Reset file input
+		projectFileInput.value = '';
+	}
+
 	// Reactive updates
 	$effect(() => {
 		if (currentProfile) {
@@ -107,9 +148,7 @@
 </script>
 
 <div class="csv-mapper">
-	<header class="header">
-		<h1>CSV Mapper</h1>
-		
+	<header class="header">	
 		<div class="profile-section">
 			<div class="profile-selector">
 				<select bind:value={currentProfile}>
@@ -154,16 +193,29 @@
 			{/if}
 		</div>
 
-		<div class="file-section">
-			<button onclick={() => showImportDialog = true} class="upload-btn">
-				Import CSV
-			</button>
-			
-			{#if outputCsv}
-				<button onclick={downloadOutput} class="download-btn">
-					Download Result
-				</button>
-			{/if}
+		<div class="header-actions">
+			<div class="project-actions">
+				<wa-button variant="default" onclick={loadProject}>
+					<wa-icon name="folder-open" slot="prefix"></wa-icon>
+					Load Project
+				</wa-button>
+				<wa-button variant="default" onclick={downloadProject}>
+					<wa-icon name="download" slot="prefix"></wa-icon>
+					Export Project
+				</wa-button>
+			</div>
+			<div class="csv-actions">
+				<wa-button variant="primary" onclick={() => showImportDialog = true}>
+					<wa-icon name="upload" slot="prefix"></wa-icon>
+					Import CSV
+				</wa-button>
+				{#if outputCsv}
+					<wa-button variant="success" onclick={downloadOutput}>
+						<wa-icon name="file-arrow-down" slot="prefix"></wa-icon>
+						Download Output
+					</wa-button>
+				{/if}
+			</div>
 		</div>
 	</header>
 
@@ -211,6 +263,15 @@
 	onImport={handleCsvImport}
 />
 
+<!-- Hidden file input for project import -->
+<input 
+	type="file" 
+	accept=".json"
+	bind:this={projectFileInput}
+	onchange={handleProjectFileSelect}
+	style="display: none;"
+/>
+
 <style>
 	.csv-mapper {
 		min-height: 100vh;
@@ -219,9 +280,11 @@
 	}
 
 	.header {
-		background: #f8f9fa;
-		padding: 1rem 2rem;
-		border-bottom: 1px solid #dee2e6;
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		color: white;
+		padding: 1.5rem 2rem;
+		border-bottom: none;
+		box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-start;
@@ -231,8 +294,10 @@
 
 	h1 {
 		margin: 0;
-		color: #333;
-		font-size: 1.8rem;
+		color: white;
+		font-size: 2rem;
+		font-weight: 600;
+		text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 	}
 
 	.profile-section {
@@ -297,21 +362,42 @@
 
 	.file-section {
 		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		align-items: flex-end;
+	}
+
+	.project-actions,
+	.csv-actions {
+		display: flex;
 		gap: 0.5rem;
 		align-items: center;
 	}
 
+	.project-btn {
+		background: #6f42c1;
+		color: white;
+		border-color: #6f42c1;
+	}
+
+	.project-btn:hover {
+		background: #5a32a3;
+	}
+
 	button {
-		padding: 0.5rem 1rem;
-		border: 1px solid #ccc;
-		border-radius: 4px;
+		padding: 0.75rem 1.5rem;
+		border: none;
+		border-radius: 8px;
 		background: white;
 		cursor: pointer;
-		transition: background-color 0.2s;
+		transition: all 0.2s ease;
+		font-weight: 500;
+		box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 	}
 
 	button:hover {
-		background: #f8f9fa;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 	}
 
 	.save-btn {
@@ -360,6 +446,7 @@
 		display: flex;
 		background: #f8f9fa;
 		border-bottom: 1px solid #dee2e6;
+		box-shadow: inset 0 -1px 0 #dee2e6;
 	}
 
 	.tab {
@@ -367,22 +454,32 @@
 		border: none;
 		background: transparent;
 		border-bottom: 3px solid transparent;
+        border-radius: 0;
 		cursor: pointer;
 		font-weight: 500;
+		color: #6c757d;
+		transition: all 0.2s ease;
 	}
 
 	.tab:hover {
 		background: #e9ecef;
+		color: #495057;
+		transform: none;
+		box-shadow: none;
 	}
 
 	.tab.active {
-		border-bottom-color: #007bff;
+		border-bottom-color: #667eea;
 		background: white;
+		color: #667eea;
+		font-weight: 600;
 	}
 
 	.main-content {
 		flex: 1;
 		padding: 2rem;
+		background: #fafafa;
+		min-height: calc(100vh - 200px);
 	}
 
 	.no-profile {

@@ -49,19 +49,6 @@
 		}
 	}
 
-	function getPreviewValue(mapping: ColumnMapping, rowIndex: number = 0): string {
-		if (!inputCsv || !inputCsv.rows[rowIndex]) return '';
-		
-		const inputRow = inputCsv.rows[rowIndex];
-		
-		if (mapping.transformation && mapping.transformation.trim()) {
-			// Show the transformation template
-			return `Transform: ${mapping.transformation}`;
-		} else {
-			// Show direct mapping - original value
-			return inputRow[mapping.sourceColumn] || '';
-		}
-	}
 
 	function getOutputPreviewValue(mapping: ColumnMapping, rowIndex: number = 0): string {
 		if (!outputCsv) return '';
