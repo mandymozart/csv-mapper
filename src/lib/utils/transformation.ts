@@ -9,9 +9,6 @@ export function executeTransformation(
   inputRow: Record<string, string>
 ): string {
   try {
-    // Create a safe function execution context
-    const func = new Function(...method.parameters, `return (${method.code})(...arguments);`);
-    
     // Resolve argument values from input row
     const resolvedArgs = args.map(arg => {
       // Check if argument is a column reference like {COLUMN_NAME}
@@ -19,8 +16,36 @@ export function executeTransformation(
       if (columnMatch) {
         return inputRow[columnMatch[1]] || '';
       }
+      // Try to parse as JSON if it looks like a complex value
+      if (typeof arg === 'string' && (arg.startsWith('[') || arg.startsWith('{'))) {
+        try {
+          return JSON.parse(arg);
+        } catch {
+          return arg;
+        }
+      }
       return arg;
     });
+    
+    // Create a safe function execution context - wrap in IIFE to handle nested functions
+    console.log('Executing method:', method.name);
+    console.log('Method code:', method.code.substring(0, 200) + '...');
+    console.log('Parameters:', method.parameters);
+    console.log('Resolved args:', resolvedArgs);
+    console.log('Args types:', resolvedArgs.map(arg => typeof arg));
+    
+    const func = new Function(...method.parameters, `
+      try {
+        console.log('Inside function - arguments:', Array.from(arguments));
+        const fn = ${method.code};
+        const result = fn(...arguments);
+        console.log('Function result:', result);
+        return result;
+      } catch (error) {
+        console.error('Error in function execution:', error);
+        throw error;
+      }
+    `);
     
     const result = func(...resolvedArgs);
     return String(result || '');

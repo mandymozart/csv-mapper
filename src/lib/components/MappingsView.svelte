@@ -251,7 +251,7 @@
 																<option value="">Select column...</option>
 																{#if inputCsv}
 																	{#each inputCsv.headers as header}
-																		<option value={header}>{header}</option>
+																		<option value="{`{${header}}`}">{header}</option>
 																	{/each}
 																{/if}
 															</select>

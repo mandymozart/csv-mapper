@@ -1,7 +1,8 @@
 <script lang="ts">
-	import type { Profile, Method } from '$lib/types';
-	import { generateId } from '$lib/utils/storage';
-	import { validateMethodCode } from '$lib/utils/transformation';
+	import type { Profile, Method } from '../types';
+	import { validateMethodCode } from '../utils/transformation';
+	import { generateId } from '../utils/helpers';
+	import { parseAllFunctionFiles } from '../utils/functionParser';
 
 	interface Props {
 		profile: Profile;
@@ -14,20 +15,10 @@
 	let editingMethod: Method | null = $state(null);
 	let validationError: string | null = $state(null);
 
-	function createMethod() {
-		const newMethod: Method = {
-			id: generateId(),
-			name: 'newMethod',
-			description: '',
-			code: '(param1, param2) => {\n  // Your transformation logic here\n  return param1;\n}',
-			parameters: ['param1', 'param2']
-		};
-		
-		profile.methods = [...profile.methods, newMethod];
-		selectedMethodId = newMethod.id;
-		editingMethod = { ...newMethod };
-		onUpdate();
-	}
+	let newMethodName: string = '';
+	let newMethodDescription: string = '';
+	let newMethodParameters: string = '';
+	let newMethodCode: string = '';
 
 	function selectMethod(methodId: string) {
 		if (editingMethod) {
@@ -50,15 +41,86 @@
 			return;
 		}
 
-		// Update the method in the profile
+		// Update the method in the profile with updatedAt timestamp
 		const index = profile.methods.findIndex(m => m.id === editingMethod!.id);
 		if (index >= 0) {
-			profile.methods[index] = { ...editingMethod };
+			const updatedMethod = { 
+				...editingMethod, 
+				updatedAt: new Date().toISOString() 
+			};
+			profile.methods[index] = updatedMethod;
 			profile.methods = [...profile.methods];
+			
+			// Update editingMethod to reflect the saved state
+			editingMethod = { ...updatedMethod };
+			
 			onUpdate();
 		}
 
 		validationError = null;
+	}
+
+	function createMethod() {
+		if (!newMethodName.trim()) {
+			alert('Please enter a method name');
+			return;
+		}
+
+		const validation = validateMethodCode(newMethodCode);
+		if (!validation.isValid) {
+			alert(`Invalid method code: ${validation.error}`);
+			return;
+		}
+
+		const method: Method = {
+			id: generateId(),
+			name: newMethodName,
+			description: newMethodDescription,
+			parameters: newMethodParameters.split(',').map(p => p.trim()).filter(Boolean),
+			code: newMethodCode,
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString()
+		};
+
+		profile.methods.push(method);
+		
+		// Force reactivity update
+		profile = { ...profile };
+		onUpdate();
+
+		// Reset form
+		newMethodName = '';
+		newMethodDescription = '';
+		newMethodParameters = '';
+		newMethodCode = '';
+	}
+
+	async function importPresetMethods() {
+		try {
+			const presetMethods = await parseAllFunctionFiles();
+			if (presetMethods.length === 0) {
+				alert('No preset methods found to import');
+				return;
+			}
+
+			// Check for existing methods to avoid duplicates
+			const existingIds = new Set(profile.methods.map(m => m.id));
+			const newMethods = presetMethods.filter(m => !existingIds.has(m.id));
+
+			if (newMethods.length === 0) {
+				alert('All preset methods are already imported');
+				return;
+			}
+
+			profile.methods.push(...newMethods);
+			profile = { ...profile };
+			onUpdate();
+
+			alert(`Successfully imported ${newMethods.length} preset methods`);
+		} catch (error) {
+			console.error('Error importing preset methods:', error);
+			alert('Failed to import preset methods');
+		}
 	}
 
 	function deleteMethod(methodId: string) {
@@ -137,10 +199,8 @@
 	<div class="methods-header">
 		<h3>Custom Methods</h3>
 		<div class="header-actions">
-			<wa-button onclick={createMethod} variant="primary">
-				<wa-icon slot="prefix" name="plus"></wa-icon>
-				Add Method
-			</wa-button>
+			<wa-button onclick={createMethod}>Create Method</wa-button>
+			<wa-button onclick={importPresetMethods} style="margin-left: 10px;">Import Presets</wa-button>
 		</div>
 	</div>
 

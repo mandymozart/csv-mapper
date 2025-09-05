@@ -38,22 +38,22 @@ const getAccountNumber = (billingCountryISO, shippingCountryISO, isCompany = fal
      * @type {Object<string, string>}
      */
     const countryAccountMap = {
-      'DE': '4001', // Deutschland - 19% EU-OSS
-      'FR': '4002', // Frankreich - 20% EU-OSS
-      'ES': '4003', // Spanien - 21% EU-OSS
-      'HR': '4004', // Kroatien - 25% EU-OSS
-      'HU': '4005', // Ungarn - 27% EU-OSS
-      'SE': '4006', // Schweden - 25% EU-OSS
-      'BE': '4007', // Belgien - 21% EU-OSS
-      'IE': '4008', // Irland - 23% EU-OSS
-      'IT': '4009', // Italien - 22% EU-OSS
-      'LU': '4010', // Luxemburg - 17% EU-OSS
-      'NL': '4011', // Niederlande - 21% EU-OSS
-      'PL': '4012', // Polen - 23% EU-OSS
-      'SI': '4013', // Slowenien - 22% EU-OSS
-      'DK': '4014', // Dänemark - 25% EU-OSS
-      'MT': '4015', // Malta - 18% EU-OSS
-      'CZ': '4016'  // Tschechien - 21% EU-OSS
+      'DEU': '4001', // Deutschland - 19% EU-OSS
+      'FRA': '4002', // Frankreich - 20% EU-OSS
+      'ESP': '4003', // Spanien - 21% EU-OSS
+      'HRV': '4004', // Kroatien - 25% EU-OSS
+      'HUN': '4005', // Ungarn - 27% EU-OSS
+      'SWE': '4006', // Schweden - 25% EU-OSS
+      'BEL': '4007', // Belgien - 21% EU-OSS
+      'IRL': '4008', // Irland - 23% EU-OSS
+      'ITA': '4009', // Italien - 22% EU-OSS
+      'LUX': '4010', // Luxemburg - 17% EU-OSS
+      'NLD': '4011', // Niederlande - 21% EU-OSS
+      'POL': '4012', // Polen - 23% EU-OSS
+      'SVN': '4013', // Slowenien - 22% EU-OSS
+      'DNK': '4014', // Dänemark - 25% EU-OSS
+      'MLT': '4015', // Malta - 18% EU-OSS
+      'CZE': '4016'  // Tschechien - 21% EU-OSS
     };
     
     if (countryAccountMap[billingCountryISO]) {
