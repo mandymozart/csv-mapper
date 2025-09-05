@@ -59,17 +59,18 @@ export function parseTransformation(transformation: string): {
  */
 export function transformCsvData(
   inputData: CsvData,
-  mappings: Array<{ sourceColumn: string; targetColumn: string; transformation?: string; isActive: boolean }>,
-  methods: Method[]
+  mappings: Array<{ sourceColumn: string; targetColumn: string; transformation?: string; isActive: boolean }> = [],
+  methods: Method[] = []
 ): CsvData {
   const methodsMap = new Map(methods.map(m => [m.name, m]));
   
   // Get unique target columns from active mappings
+  // Use sourceColumn as default if targetColumn is empty
   const targetHeaders = Array.from(
     new Set(
       mappings
         .filter(m => m.isActive)
-        .map(m => m.targetColumn)
+        .map(m => m.targetColumn || m.sourceColumn)
         .filter(Boolean)
     )
   );
@@ -80,11 +81,14 @@ export function transformCsvData(
     const outputRow: Record<string, string> = {};
     
     mappings.forEach(mapping => {
-      if (!mapping.isActive || !mapping.targetColumn) return;
+      if (!mapping.isActive || !mapping.sourceColumn) return;
+      
+      // Use sourceColumn as targetColumn if targetColumn is empty
+      const targetColumn = mapping.targetColumn || mapping.sourceColumn;
       
       let value = '';
       
-      if (mapping.transformation) {
+      if (mapping.transformation && mapping.transformation.trim()) {
         // Check if it's a method call
         const parsed = parseTransformation(mapping.transformation);
         if (parsed && methodsMap.has(parsed.methodName)) {
@@ -95,11 +99,11 @@ export function transformCsvData(
           value = replaceColumnVariables(mapping.transformation, inputRow);
         }
       } else {
-        // Direct column mapping
+        // Direct column mapping - use original value when no transformation
         value = inputRow[mapping.sourceColumn] || '';
       }
       
-      outputRow[mapping.targetColumn] = value;
+      outputRow[targetColumn] = value;
     });
     
     outputRows.push(outputRow);

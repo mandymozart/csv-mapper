@@ -51,11 +51,17 @@
 	function saveCurrentProfile() {
 		if (!currentProfile) return;
 		
-		currentProfile.updatedAt = new Date().toISOString();
+		// Create a new profile object to avoid mutation issues
+		const updatedProfile = {
+			...currentProfile,
+			updatedAt: new Date().toISOString()
+		};
+		
 		const index = profiles.findIndex(p => p.id === currentProfile!.id);
 		if (index >= 0) {
-			profiles[index] = currentProfile;
+			profiles[index] = updatedProfile;
 			profiles = [...profiles];
+			currentProfile = updatedProfile;
 			saveProfiles(profiles);
 		}
 		isEditingProfile = false;
@@ -106,7 +112,7 @@
 		
 		<div class="profile-section">
 			<div class="profile-selector">
-				<select bind:value={currentProfile} onchange={(e) => selectProfile((e.target as HTMLSelectElement).value as any)}>
+				<select bind:value={currentProfile}>
 					<option value={null}>Select a profile...</option>
 					{#each profiles as profile}
 						<option value={profile}>{profile.name}</option>

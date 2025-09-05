@@ -22,21 +22,30 @@
 			isActive: true
 		};
 		
+		// Initialize mappings array if it doesn't exist
+		if (!profile.mappings) {
+			profile.mappings = [];
+		}
+		
 		profile.mappings = [...profile.mappings, newMapping];
 		onUpdate();
 	}
 
 	function removeMapping(mappingId: string) {
-		profile.mappings = profile.mappings.filter(m => m.id !== mappingId);
-		onUpdate();
+		if (profile.mappings) {
+			profile.mappings = profile.mappings.filter(m => m.id !== mappingId);
+			onUpdate();
+		}
 	}
 
 	function updateMapping(mappingId: string, field: keyof ColumnMapping, value: any) {
-		const mapping = profile.mappings.find(m => m.id === mappingId);
-		if (mapping) {
-			(mapping as any)[field] = value;
-			profile.mappings = [...profile.mappings];
-			onUpdate();
+		if (profile.mappings) {
+			const mapping = profile.mappings.find(m => m.id === mappingId);
+			if (mapping) {
+				(mapping as any)[field] = value;
+				profile.mappings = [...profile.mappings];
+				onUpdate();
+			}
 		}
 	}
 
@@ -45,20 +54,25 @@
 		
 		const inputRow = inputCsv.rows[rowIndex];
 		
-		if (mapping.transformation) {
+		if (mapping.transformation && mapping.transformation.trim()) {
 			// Show the transformation template
-			return mapping.transformation.replace(/\{([^}]+)\}/g, (match, columnName) => {
-				return inputRow[columnName] || match;
-			});
+			return `Transform: ${mapping.transformation}`;
 		} else {
-			// Direct column mapping
+			// Show direct mapping - original value
 			return inputRow[mapping.sourceColumn] || '';
 		}
 	}
 
-	function getOutputPreviewValue(targetColumn: string, rowIndex: number = 0): string {
-		if (!outputCsv || !outputCsv.rows[rowIndex]) return '';
-		return outputCsv.rows[rowIndex][targetColumn] || '';
+	function getOutputPreviewValue(mapping: ColumnMapping, rowIndex: number = 0): string {
+		if (!outputCsv) return '';
+		
+		// Use sourceColumn as targetColumn if targetColumn is empty
+		const targetColumn = mapping.targetColumn || mapping.sourceColumn;
+		return outputCsv.rows[rowIndex]?.[targetColumn] || '';
+	}
+
+	function getEffectiveTargetName(mapping: ColumnMapping): string {
+		return mapping.targetColumn || mapping.sourceColumn || 'Unnamed';
 	}
 </script>
 
@@ -68,7 +82,7 @@
 		<button onclick={addMapping} class="add-mapping-btn">Add Mapping</button>
 	</div>
 
-	{#if profile.mappings.length === 0}
+	{#if !profile.mappings || profile.mappings.length === 0}
 		<div class="empty-state">
 			<p>No mappings defined. Click "Add Mapping" to create your first column mapping.</p>
 		</div>
@@ -128,12 +142,12 @@
 									</button>
 								</div>
 
-								<label>Target Column:</label>
+								<label>Target Name (optional):</label>
 								<input 
 									type="text" 
 									bind:value={mapping.targetColumn}
 									onchange={() => updateMapping(mapping.id, 'targetColumn', mapping.targetColumn)}
-									placeholder="Enter target column name"
+									placeholder="Leave empty to use original column name"
 								/>
 
 								<label>Transformation (optional):</label>
@@ -141,7 +155,7 @@
 									type="text" 
 									bind:value={mapping.transformation}
 									onchange={() => updateMapping(mapping.id, 'transformation', mapping.transformation)}
-									placeholder="e.g., &#123;SOURCE_COLUMN&#125; or methodName(&#123;param1&#125;, &#123;param2&#125;)"
+									placeholder="Leave empty to use original value"
 								/>
 
 								<div class="transformation-help">
@@ -155,11 +169,11 @@
 						<!-- Output Section -->
 						<div class="output-section">
 							<div class="section-content">
-								<label>Target: {mapping.targetColumn || 'Not set'}</label>
+								<label>Target: {getEffectiveTargetName(mapping)}</label>
 								
-								{#if mapping.isActive && mapping.targetColumn}
+								{#if mapping.isActive && mapping.sourceColumn}
 									<div class="preview-value">
-										<strong>Preview:</strong> {getOutputPreviewValue(mapping.targetColumn)}
+										<strong>Preview:</strong> {getOutputPreviewValue(mapping)}
 									</div>
 								{:else}
 									<div class="preview-value inactive-preview">
