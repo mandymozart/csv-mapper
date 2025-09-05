@@ -59,10 +59,17 @@ export function parseTransformation(transformation: string): {
  */
 export function transformCsvData(
   inputData: CsvData,
-  mappings: Array<{ sourceColumn: string; targetColumn: string; transformation?: string; isActive: boolean }> = [],
+  mappings: Array<{ 
+    sourceColumn: string; 
+    targetColumn: string; 
+    transformation?: string;
+    transformationMethod?: string;
+    transformationParams?: string[];
+    isActive: boolean 
+  }> = [],
   methods: Method[] = []
 ): CsvData {
-  const methodsMap = new Map(methods.map(m => [m.name, m]));
+  const methodsMap = new Map(methods.map(m => [m.id, m]));
   
   // Get unique target columns from active mappings
   // Use sourceColumn as default if targetColumn is empty
@@ -88,8 +95,15 @@ export function transformCsvData(
       
       let value = '';
       
-      if (mapping.transformation && mapping.transformation.trim()) {
-        // Check if it's a method call
+      // Check for new method-based transformation first
+      if (mapping.transformationMethod && methodsMap.has(mapping.transformationMethod)) {
+        const method = methodsMap.get(mapping.transformationMethod)!;
+        const params = mapping.transformationParams || [];
+        console.log('Executing method:', method.name, 'with params:', params, 'for row:', inputRow);
+        value = executeTransformation(method, params, inputRow);
+        console.log('Method result:', value);
+      } else if (mapping.transformation && mapping.transformation.trim()) {
+        // Fallback to old transformation string format
         const parsed = parseTransformation(mapping.transformation);
         if (parsed && methodsMap.has(parsed.methodName)) {
           const method = methodsMap.get(parsed.methodName)!;

@@ -13,6 +13,10 @@ export interface ColumnMapping {
   sourceColumn: string;
   targetColumn: string;
   transformation?: string; // Method name or direct value template
+  transformationMethod?: string; // Selected method ID
+  transformationParams?: string[]; // Parameter values for the method
+  hasCustomTarget?: boolean;
+  hasTransformation?: boolean;
   isActive: boolean;
 }
 

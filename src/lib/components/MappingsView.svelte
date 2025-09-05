@@ -117,20 +117,24 @@
 						<div class="input-section">
 							<div class="section-content">
 								<label>Source Column:</label>
-								<select 
-									value={mapping.sourceColumn || ''}
-									onchange={(e: Event) => {
-										mapping.sourceColumn = (e.target as HTMLSelectElement).value;
-										updateMapping(mapping.id, 'sourceColumn', mapping.sourceColumn);
-									}}
-								>
-									<option value="">Select column...</option>
-									{#if inputCsv}
+								{#if inputCsv}
+									<select 
+										value={mapping.sourceColumn || ''}
+										onchange={(e: Event) => {
+											mapping.sourceColumn = (e.target as HTMLSelectElement).value;
+											updateMapping(mapping.id, 'sourceColumn', mapping.sourceColumn);
+										}}
+									>
+										<option value="">Select column...</option>
 										{#each inputCsv.headers as header}
 											<option value={header}>{header}</option>
 										{/each}
-									{/if}
-								</select>
+									</select>
+								{:else}
+									<div class="memorized-value">
+										{mapping.sourceColumn || 'No column selected'}
+									</div>
+								{/if}
 								
 								{#if mapping.sourceColumn && inputCsv}
 									<div class="preview-value">
@@ -165,27 +169,99 @@
 									</wa-button>
 								</div>
 
-								<label>Target Name (optional):</label>
-								<input 
-									type="text"
-									value={mapping.targetColumn || ''}
-									onchange={(e: Event) => {
-										mapping.targetColumn = (e.target as HTMLInputElement).value;
-										updateMapping(mapping.id, 'targetColumn', mapping.targetColumn);
-									}}
-									placeholder="Leave empty to use original column name"
-								/>
+								<label>
+									<input 
+										type="checkbox"
+										checked={mapping.hasCustomTarget || false}
+										onchange={(e: Event) => {
+											mapping.hasCustomTarget = (e.target as HTMLInputElement).checked;
+											if (!mapping.hasCustomTarget) {
+												mapping.targetColumn = '';
+											}
+											updateMapping(mapping.id, 'hasCustomTarget', mapping.hasCustomTarget);
+											updateMapping(mapping.id, 'targetColumn', mapping.targetColumn);
+										}}
+									/>
+									Custom Target Name
+								</label>
+								{#if mapping.hasCustomTarget}
+									<input 
+										type="text"
+										value={mapping.targetColumn || ''}
+										onchange={(e: Event) => {
+											mapping.targetColumn = (e.target as HTMLInputElement).value;
+											updateMapping(mapping.id, 'targetColumn', mapping.targetColumn);
+										}}
+										placeholder="Enter custom target column name"
+									/>
+								{/if}
 
-								<label>Transformation (optional):</label>
-								<input 
-									type="text"
-									value={mapping.transformation || ''}
-									onchange={(e: Event) => {
-										mapping.transformation = (e.target as HTMLInputElement).value;
-										updateMapping(mapping.id, 'transformation', mapping.transformation);
-									}}
-									placeholder="Leave empty to use original value"
-								/>
+								<label>
+									<input 
+										type="checkbox"
+										checked={mapping.hasTransformation || false}
+										onchange={(e: Event) => {
+											mapping.hasTransformation = (e.target as HTMLInputElement).checked;
+											if (!mapping.hasTransformation) {
+												mapping.transformation = '';
+											}
+											updateMapping(mapping.id, 'hasTransformation', mapping.hasTransformation);
+											updateMapping(mapping.id, 'transformation', mapping.transformation);
+										}}
+									/>
+									Transformation
+								</label>
+								{#if mapping.hasTransformation}
+									<div class="transformation-config">
+										<label>Method:</label>
+										<select 
+											value={mapping.transformationMethod || ''}
+											onchange={(e: Event) => {
+												mapping.transformationMethod = (e.target as HTMLSelectElement).value;
+												// Reset parameters when method changes
+												mapping.transformationParams = [];
+												updateMapping(mapping.id, 'transformationMethod', mapping.transformationMethod);
+												updateMapping(mapping.id, 'transformationParams', mapping.transformationParams);
+											}}
+										>
+											<option value="">Select method...</option>
+											{#if profile.methods}
+												{#each profile.methods as method}
+													<option value={method.id}>{method.name}</option>
+												{/each}
+											{/if}
+										</select>
+										
+										{#if mapping.transformationMethod && profile.methods}
+											{@const selectedMethod = profile.methods.find(m => m.id === mapping.transformationMethod)}
+											{#if selectedMethod && selectedMethod.parameters.length > 0}
+												<div class="method-parameters">
+													<label>Parameters:</label>
+													{#each selectedMethod.parameters as param, index}
+														<div class="parameter-row">
+															<label>{param}:</label>
+															<select 
+																value={mapping.transformationParams?.[index] || ''}
+																onchange={(e: Event) => {
+																	if (!mapping.transformationParams) mapping.transformationParams = [];
+																	mapping.transformationParams[index] = (e.target as HTMLSelectElement).value;
+																	updateMapping(mapping.id, 'transformationParams', mapping.transformationParams);
+																}}
+															>
+																<option value="">Select column...</option>
+																{#if inputCsv}
+																	{#each inputCsv.headers as header}
+																		<option value={header}>{header}</option>
+																	{/each}
+																{/if}
+															</select>
+														</div>
+													{/each}
+												</div>
+											{/if}
+										{/if}
+									</div>
+								{/if}
 
 								<div class="transformation-help">
 									<small>
