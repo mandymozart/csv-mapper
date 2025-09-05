@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Profile } from '../types';
 	import { generateId } from '../utils/helpers';
-
+	import { formatRelativeTime } from '../utils/helpers';
 	interface Props {
 		profiles: Profile[];
 		currentProfile: Profile | null;
@@ -28,6 +28,10 @@
 		isEditingProfile = true;
 		onProfileUpdate();
 	}
+
+	
+	
+
 
 	function saveCurrentProfile() {
 		if (!currentProfile) return;
@@ -96,25 +100,26 @@
 			<div class="profile-info">
 				{#if isEditingProfile}
 					<div class="profile-edit">
-						<wa-input 
-							label="Profile Name"
-							value={currentProfile?.name || ''} 
-							placeholder="Profile name"
-							oninput={(e: CustomEvent) => {
-								if (currentProfile) currentProfile.name = e.detail.value;
-							}}
-							class="profile-name-input"
-						></wa-input>
-						<wa-input 
-							label="Profile Description"
-							value={currentProfile?.description || ''} 
-							placeholder="Profile description"
-							oninput={(e: CustomEvent) => {
-								if (currentProfile) currentProfile.description = e.detail.value;
-							}}
-							class="profile-description-input"
-							type="textarea"
-						></wa-input>
+						<div class="input-group">
+							<label for="profile-name">Profile Name</label>
+							<input 
+								id="profile-name"
+								type="text"
+								bind:value={currentProfile.name}
+								placeholder="Profile name"
+								class="profile-name-input"
+							/>
+						</div>
+						<div class="input-group">
+							<label for="profile-description">Profile Description</label>
+							<textarea 
+								id="profile-description"
+								bind:value={currentProfile.description}
+								placeholder="Profile description"
+								class="profile-description-input"
+								rows="3"
+							></textarea>
+						</div>
 						<div class="profile-actions">
 							<wa-button variant="success" onclick={saveCurrentProfile}>
 								<wa-icon name="check" slot="prefix"></wa-icon>
@@ -129,6 +134,24 @@
 				{:else}
 					<div class="profile-display">
 						<h2>{currentProfile.name}</h2>
+						<div class="storage-stats">
+							{#if currentProfile}
+								<wa-badge appearance="outlined" variant="neutral" pill size="small">
+									Created: {formatRelativeTime(currentProfile.createdAt)}
+								</wa-badge>
+								<wa-badge appearance="outlined" variant="neutral" pill size="small">
+									Updated: {formatRelativeTime(currentProfile.updatedAt)}
+								</wa-badge>
+								{#if currentProfile.methods.length > 0}
+									{@const latestMethod = currentProfile.methods.reduce((latest, method) => 
+										new Date(method.updatedAt) > new Date(latest.updatedAt) ? method : latest
+									)}
+									<wa-badge appearance="outlined" variant="neutral" pill size="small">
+										Methods: {formatRelativeTime(latestMethod.updatedAt)}
+									</wa-badge>
+								{/if}
+							{/if}
+						</div>
 						<p>{currentProfile.description}</p>
 						<div class="profile-actions">
 							<wa-button variant="default" onclick={() => isEditingProfile = true}>
@@ -160,6 +183,9 @@
 		gap: 0;
 	}
 
+	.storage-stats {
+		margin-bottom: 1rem;
+	}
 	.profiles-sidebar {
 		width: 300px;
 		display: flex;
@@ -293,8 +319,38 @@
 		gap: 1rem;
 	}
 
+	.input-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.input-group label {
+		font-weight: 500;
+		color: #333;
+		font-size: 0.9rem;
+	}
+
 	.profile-name-input,
 	.profile-description-input {
 		width: 100%;
+		padding: 0.75rem;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		font-size: 0.9rem;
+		transition: border-color 0.2s ease;
+	}
+
+	.profile-name-input:focus,
+	.profile-description-input:focus {
+		outline: none;
+		border-color: #667eea;
+		box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+	}
+
+	.profile-description-input {
+		resize: vertical;
+		min-height: 80px;
+		font-family: inherit;
 	}
 </style>

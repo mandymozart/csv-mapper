@@ -8,6 +8,7 @@
 	import MappingsView from '$lib/components/MappingsView.svelte';
 	import MethodsView from '$lib/components/MethodsView.svelte';
 	import ProfilesView from '$lib/components/ProfilesView.svelte';
+	import { formatRelativeTime } from '$lib/utils/helpers';
 	// Import WebAwesome styles and components
 	import '@awesome.me/webawesome/dist/styles/themes/default.css';
 	import '@awesome.me/webawesome/dist/components/button/button.js';
@@ -188,6 +189,14 @@
 					<wa-icon name="pencil" class="edit-icon"></wa-icon>
 				</h1>
 			{/if}
+			{#if profiles.length > 0}
+								{@const latestProfile = profiles.reduce((latest, profile) => 
+									new Date(profile.updatedAt) > new Date(latest.updatedAt) ? profile : latest
+								)}
+								<wa-badge appearance="filled" variant="neutral" pill size="small">
+									Last Save: {formatRelativeTime(latestProfile.updatedAt)}
+								</wa-badge>
+							{/if}
 		</div>
 
 		<div class="header-actions">
@@ -214,6 +223,10 @@
 		<wa-tab slot="nav" panel="profiles" active={activeView === 'profiles'}>
 			<wa-icon name="user-group" slot="prefix"></wa-icon>
 			Profiles&nbsp;
+			{#if profiles.length > 0}
+				<wa-badge appearance="outlined" variant="neutral" pill size="small">{profiles.length}</wa-badge>
+			{/if}
+			&nbsp;
 			{#if currentProfile}
 				<wa-badge appearance="filled" variant="brand" pill size="small">{currentProfile.name}</wa-badge>
 			{/if}
@@ -314,6 +327,13 @@
 		min-width: 300px;
 	}
 
+	.storage-stats {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-top: 0.75rem;
+	}
+
 	.project-name {
 		margin: 0;
 		font-size: 1.5rem;
@@ -357,282 +377,11 @@
 		gap: 0.25rem;
 	}
 
-	.profile-section {
-		padding: 2rem;
-		max-width: 800px;
-		margin: 0 auto;
-	}
 
-	.profile-selector {
-		display: flex;
-		gap: 0.5rem;
-		margin-bottom: 1rem;
-	}
-
-	.profile-selector select {
-		flex: 1;
-		padding: 0.5rem;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-	}
-
-	.profile-info {
-		background: white;
-		padding: 1rem;
-		border-radius: 8px;
-		border: 1px solid #e9ecef;
-	}
-
-	.profile-name-input {
-		width: 100%;
-		padding: 0.5rem;
-		font-size: 1.2rem;
-		font-weight: bold;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-		margin-bottom: 0.5rem;
-	}
-
-	.profile-description-input {
-		width: 100%;
-		padding: 0.5rem;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-		resize: vertical;
-		min-height: 60px;
-		margin-bottom: 0.5rem;
-	}
-
-	.profile-display h2 {
-		margin: 0 0 0.5rem 0;
-		color: #333;
-	}
-
-	.profile-display p {
-		margin: 0 0 1rem 0;
-		color: #666;
-	}
-
-	.profile-actions {
-		display: flex;
-		gap: 0.5rem;
-	}
-
-	.file-section {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		align-items: flex-end;
-	}
-
-	.project-actions,
-	.csv-actions {
-		display: flex;
-		gap: 0.5rem;
-		align-items: center;
-	}
-
-	.project-btn {
-		background: #6f42c1;
-		color: white;
-		border-color: #6f42c1;
-	}
-
-	.project-btn:hover {
-		background: #5a32a3;
-	}
-
-	button {
-		padding: 0.75rem 1.5rem;
-		border: none;
-		border-radius: 8px;
-		background: white;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		font-weight: 500;
-		box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-	}
-
-	button:hover {
-		transform: translateY(-1px);
-		box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-	}
-
-	.save-btn {
-		background: #28a745;
-		color: white;
-		border-color: #28a745;
-	}
-
-	.save-btn:hover {
-		background: #218838;
-	}
-
-	.cancel-btn {
-		background: #6c757d;
-		color: white;
-		border-color: #6c757d;
-	}
-
-	.delete-btn {
-		background: #dc3545;
-		color: white;
-		border-color: #dc3545;
-	}
-
-	.delete-btn:hover {
-		background: #c82333;
-	}
-
-	.upload-btn {
-		background: #007bff;
-		color: white;
-		border-color: #007bff;
-	}
-
-	.upload-btn:hover {
-		background: #0056b3;
-	}
-
-	.download-btn {
-		background: #28a745;
-		color: white;
-		border-color: #28a745;
-	}
-
-	/* WebAwesome tab styling */
-	wa-tab-group {
-		--wa-tab-group-background: #f8f9fa;
-		--wa-tab-background: transparent;
-		--wa-tab-color: #6c757d;
-		--wa-tab-active-color: #667eea;
-		--wa-tab-active-background: white;
-		--wa-tab-border-color: #dee2e6;
-		--wa-tab-active-border-color: #667eea;
-	}
-
+	
 	wa-tab-panel {
 		padding: 2rem;
 		background: #fafafa;
 		min-height: calc(100vh - 200px);
-	}
-
-	/* Profiles Layout */
-	.profiles-layout {
-		display: flex;
-		height: calc(100vh - 200px);
-		gap: 0;
-	}
-
-	.profiles-sidebar {
-		width: 300px;
-		background: white;
-		border-right: 1px solid #dee2e6;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.profiles-header {
-		padding: 1rem;
-		border-bottom: 1px solid #dee2e6;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		background: #f8f9fa;
-	}
-
-	.profiles-header h3 {
-		margin: 0;
-		color: #495057;
-		font-size: 1.1rem;
-		font-weight: 600;
-	}
-
-	.profiles-list {
-		flex: 1;
-		overflow-y: auto;
-	}
-
-	.profile-item {
-		width: 100%;
-		padding: 0.75rem 1rem;
-		border: none;
-		border-bottom: 1px solid #f1f3f4;
-		background: transparent;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		text-align: left;
-	}
-
-	.profile-item:hover {
-		background: #f8f9fa;
-	}
-
-	.profile-item.active {
-		background: #e3f2fd;
-		border-left: 3px solid #667eea;
-	}
-
-	.profile-item-content {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-	}
-
-	.profile-name {
-		font-weight: 500;
-		color: #212529;
-		font-size: 0.9rem;
-	}
-
-	.profile-description {
-		font-size: 0.8rem;
-		color: #6c757d;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.empty-profiles {
-		padding: 2rem 1rem;
-		text-align: center;
-		color: #6c757d;
-	}
-
-	.empty-profiles p {
-		margin: 0.5rem 0;
-	}
-
-	.empty-hint {
-		font-size: 0.85rem;
-		opacity: 0.8;
-	}
-
-	.profile-details {
-		flex: 1;
-		padding: 2rem;
-		background: #fafafa;
-		overflow-y: auto;
-	}
-
-	.no-profile {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		color: #666;
-		font-size: 1.1rem;
-		text-align: center;
-	}
-
-	.no-profile h3 {
-		margin: 0.5rem 0;
-		color: #495057;
-	}
-
-	.no-profile p {
-		margin: 0;
-		color: #6c757d;
 	}
 </style>
