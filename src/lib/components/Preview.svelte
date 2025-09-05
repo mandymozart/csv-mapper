@@ -10,6 +10,7 @@
 		defaultRowCount?: number;
 		collapsible?: boolean;
 		defaultCollapsed?: boolean;
+		onRowClick?: (rowIndex: number) => void;
 	}
 
 	let { 
@@ -20,7 +21,8 @@
 		defaultStartRow = 1,
 		defaultRowCount = 5,
 		collapsible = false,
-		defaultCollapsed = false
+		defaultCollapsed = false,
+		onRowClick
 	}: Props = $props();
 
 	let previewStartRow = $state(defaultStartRow);
@@ -43,6 +45,14 @@
 
 	function toggleCollapse() {
 		isCollapsed = !isCollapsed;
+	}
+
+	function handleRowClick(rowIndex: number) {
+		if (onRowClick) {
+			// Convert display index to actual data index (0-based)
+			const actualRowIndex = startIndex + rowIndex;
+			onRowClick(actualRowIndex);
+		}
 	}
 </script>
 
@@ -98,7 +108,7 @@
 				</thead>
 				<tbody>
 					{#each displayRows as row, index}
-						<tr>
+						<tr class="data-row {onRowClick ? 'clickable' : ''}" onclick={() => handleRowClick(index)}>
 							{#if showLineNumbers}
 								<td class="line-number">{previewStartRow + index}</td>
 							{/if}
@@ -255,6 +265,14 @@
 
 	.preview-table tbody tr:hover {
 		background: #f8f9fa;
+	}
+
+	.data-row.clickable {
+		cursor: pointer;
+	}
+
+	.data-row.clickable:hover {
+		background: #e3f2fd !important;
 	}
 
 	.preview-note {

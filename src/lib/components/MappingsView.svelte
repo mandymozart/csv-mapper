@@ -12,6 +12,8 @@
 
 	let { profile = $bindable(), inputCsv, outputCsv, onUpdate }: Props = $props();
 
+	// Row selection for preview
+	let selectedPreviewRow = $state(0);
 
 	function addMapping() {
 		const newMapping: ColumnMapping = {
@@ -50,7 +52,12 @@
 	}
 
 
-	function getOutputPreviewValue(mapping: ColumnMapping, rowIndex: number = 0): string {
+	function getInputPreviewValue(mapping: ColumnMapping, rowIndex: number = selectedPreviewRow): string {
+		if (!inputCsv || !mapping.sourceColumn) return '';
+		return inputCsv.rows[rowIndex]?.[mapping.sourceColumn] || 'N/A';
+	}
+
+	function getOutputPreviewValue(mapping: ColumnMapping, rowIndex: number = selectedPreviewRow): string {
 		if (!outputCsv) return '';
 		
 		// Use sourceColumn as targetColumn if targetColumn is empty
@@ -66,7 +73,19 @@
 <div class="mappings-view">
 	<div class="mappings-header">
 		<h3>Column Mappings</h3>
-		<button onclick={addMapping} class="add-mapping-btn">Add Mapping</button>
+		<div class="header-controls">
+			{#if inputCsv && inputCsv.rows.length > 0}
+				<div class="row-selector">
+					<label for="preview-row">Preview Row:</label>
+					<select id="preview-row" bind:value={selectedPreviewRow}>
+						{#each inputCsv.rows as _, index}
+							<option value={index}>Row {index + 1}</option>
+						{/each}
+					</select>
+				</div>
+			{/if}
+			<button onclick={addMapping} class="add-mapping-btn">Add Mapping</button>
+		</div>
 	</div>
 
 	{#if !profile.mappings || profile.mappings.length === 0}
@@ -102,7 +121,7 @@
 								
 								{#if mapping.sourceColumn && inputCsv}
 									<div class="preview-value">
-										<strong>Sample:</strong> {inputCsv.rows[0]?.[mapping.sourceColumn] || 'N/A'}
+										<strong>Sample:</strong> {getInputPreviewValue(mapping)}
 									</div>
 								{/if}
 							</div>
@@ -183,6 +202,7 @@
 			hasHeaders={false}
 			collapsible={true}
 			defaultCollapsed={false}
+			onRowClick={(rowIndex) => selectedPreviewRow = rowIndex}
 		/>
 	{/if}
 
@@ -194,6 +214,7 @@
 			hasHeaders={false}
 			collapsible={true}
 			defaultCollapsed={false}
+			onRowClick={(rowIndex) => selectedPreviewRow = rowIndex}
 		/>
 	{/if}
 </div>
@@ -214,6 +235,32 @@
 	.mappings-header h3 {
 		margin: 0;
 		color: #333;
+	}
+
+	.header-controls {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.row-selector {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.row-selector label {
+		font-size: 0.9rem;
+		color: #666;
+		white-space: nowrap;
+	}
+
+	.row-selector select {
+		padding: 0.25rem 0.5rem;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		font-size: 0.9rem;
+		background: white;
 	}
 
 	.add-mapping-btn {

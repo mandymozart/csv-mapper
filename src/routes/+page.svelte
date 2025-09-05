@@ -292,14 +292,6 @@
 		flex-wrap: wrap;
 	}
 
-	h1 {
-		margin: 0;
-		color: white;
-		font-size: 2rem;
-		font-weight: 600;
-		text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-	}
-
 	.profile-section {
 		flex: 1;
 		min-width: 300px;
