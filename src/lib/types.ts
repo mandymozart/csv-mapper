@@ -40,5 +40,15 @@ export interface AppState {
   selectedMethod: string | null;
 }
 
+// CSV parsing options
+export interface CsvParseOptions {
+	delimiter: string;
+	quote: string;
+	escape: string;
+	hasHeader: boolean;
+	trim: boolean;
+	skipEmptyLines: boolean;
+}
+
 // Utility types
 export type ViewType = 'mappings' | 'methods';
