@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Profile, Method } from '../types';
 	import { validateMethodCode } from '../utils/transformation';
-	import { generateId } from '../utils/helpers';
+	import { generateId, formatRelativeTime } from '../utils/helpers';
 
 	interface Props {
 		profile: Profile;
@@ -150,7 +150,9 @@
 			name: example.name,
 			description: example.description,
 			code: example.code,
-			parameters: [...example.parameters]
+			parameters: [...example.parameters],
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString()
 		};
 		
 		profile.methods = [...profile.methods, newMethod];
@@ -220,6 +222,19 @@
 			{#if editingMethod}
 				<div class="editor-content">
 					<div class="method-info">
+						<div class="method-timestamps">
+							{#if editingMethod.createdAt}
+								<wa-badge appearance="outlined" variant="neutral" pill size="small">
+									Created: {formatRelativeTime(editingMethod.createdAt)}
+								</wa-badge>
+							{/if}
+							{#if editingMethod.updatedAt}
+								<wa-badge appearance="outlined" variant="success" pill size="small">
+									Updated: {formatRelativeTime(editingMethod.updatedAt)}
+								</wa-badge>
+							{/if}
+						</div>
+
 						<div class="form-group">
 							<label for="method-name">Method Name:</label>
 							<input 
@@ -266,7 +281,7 @@
 					</div>
 
 					<div class="code-editor">
-						<label for="method-code">JavaScript Function:</label>
+						<label for="method-code">Code:</label>
 						<textarea 
 							id="method-code"
 							bind:value={editingMethod.code}
@@ -491,6 +506,13 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+	}
+
+	.method-timestamps {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		margin-bottom: 0.5rem;
 	}
 
 	.form-group {
